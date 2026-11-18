@@ -1,0 +1,10 @@
+@model ClinicService
+@{var edit=Model.Id>0;ViewData["Title"]=edit?"Sửa dịch vụ":"Thêm dịch vụ";}
+<div class="page-title"><h1>@ViewData["Title"]</h1><a asp-action="Index">← Danh sách</a></div>
+<div class="panel narrow"><form method="post" asp-action="@(edit?"Edit":"Create")" asp-route-id="@Model.Id" class="form-stack"><input asp-for="Id" type="hidden"/><div asp-validation-summary="All" class="validation"></div>
+<label asp-for="Name">Tên dịch vụ</label><input asp-for="Name"/>
+<label asp-for="Description">Mô tả</label><textarea asp-for="Description"></textarea>
+<label asp-for="Price">Giá (VND)</label><input asp-for="Price" type="number" step="1000" min="0"/>
+<label asp-for="DurationMinutes">Thời lượng (phút)</label><input asp-for="DurationMinutes" type="number" min="15" max="480"/>
+<label><input asp-for="IsActive" type="checkbox"/> Đang hoạt động</label>
+<button class="btn" type="submit">Lưu dịch vụ</button></form></div>

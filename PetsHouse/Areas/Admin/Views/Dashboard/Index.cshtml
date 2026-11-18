@@ -1,0 +1,288 @@
+@model DashboardVm
+
+@{
+    ViewData["Title"] = "Tổng quan phòng khám";
+    var largestDailyCount = Math.Max(1, Model.WeeklyVisits.Max(item => item.Count));
+}
+
+<div class="dashboard-heading">
+    <div>
+        <h1>Xin chào, Quản trị viên!</h1>
+        <p>Tổng quan hoạt động phòng khám theo dữ liệu thực tế</p>
+    </div>
+    <form class="dashboard-date" method="get" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+        <label class="sr-only" for="dashboardDay">Chọn ngày thống kê</label>
+        <input id="dashboardDay" name="day" type="date"
+               value="@Model.SelectedDay.ToString("yyyy-MM-dd")"
+               data-submit-on-change />
+    </form>
+</div>
+
+<div class="dashboard-layout">
+    <div class="dashboard-primary">
+        <section class="overview-stats" aria-label="Thống kê lịch hẹn theo ngày">
+            <a class="overview-card" asp-area="Admin" asp-controller="Appointments"
+               asp-action="Index" asp-route-day="@Model.SelectedDay.ToString("yyyy-MM-dd")">
+                <span class="overview-icon blue">
+                    <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                </span>
+                <span class="overview-copy">
+                    <span>Lịch hẹn trong ngày</span>
+                    <strong>@Model.TodayAppointments</strong>
+                </span>
+            </a>
+            <a class="overview-card" asp-area="Admin" asp-controller="Appointments"
+               asp-action="Index" asp-route-day="@Model.SelectedDay.ToString("yyyy-MM-dd")"
+               asp-route-status="InProgress">
+                <span class="overview-icon green">
+                    <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                </span>
+                <span class="overview-copy">
+                    <span>Đang khám</span>
+                    <strong>@Model.InProgressToday</strong>
+                </span>
+            </a>
+            <a class="overview-card" asp-area="Admin" asp-controller="Appointments"
+               asp-action="Index" asp-route-day="@Model.SelectedDay.ToString("yyyy-MM-dd")">
+                <span class="overview-icon orange">
+                    <svg class="icon"><use href="/images/icons.svg#clock"></use></svg>
+                </span>
+                <span class="overview-copy">
+                    <span>Chờ tiếp nhận / khám</span>
+                    <strong>@Model.WaitingToday</strong>
+                </span>
+            </a>
+            <a class="overview-card" asp-area="Admin" asp-controller="Appointments"
+               asp-action="Index" asp-route-day="@Model.SelectedDay.ToString("yyyy-MM-dd")"
+               asp-route-status="Completed">
+                <span class="overview-icon purple">
+                    <svg class="icon"><use href="/images/icons.svg#check"></use></svg>
+                </span>
+                <span class="overview-copy">
+                    <span>Đã hoàn thành</span>
+                    <strong>@Model.CompletedToday</strong>
+                </span>
+            </a>
+        </section>
+
+        <section class="panel dashboard-appointments">
+            <div class="section-bar">
+                <h2>
+                    <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                    Lịch hẹn khám
+                </h2>
+                <a class="btn btn-small" asp-area="Admin" asp-controller="Appointments" asp-action="Index">
+                    <svg class="icon"><use href="/images/icons.svg#eye"></use></svg>
+                    Xem tất cả
+                </a>
+            </div>
+
+            <div class="status-filters">
+                <a class="active" asp-area="Admin" asp-controller="Appointments" asp-action="Index">
+                    Tất cả (@Model.Appointments)
+                </a>
+                <a class="status-pending" asp-area="Admin" asp-controller="Appointments"
+                   asp-action="Index" asp-route-status="Waiting">
+                    Chờ khám
+                </a>
+                <a class="status-progress" asp-area="Admin" asp-controller="Appointments"
+                   asp-action="Index" asp-route-status="InProgress">
+                    Đang khám
+                </a>
+                <a class="status-done" asp-area="Admin" asp-controller="Appointments"
+                   asp-action="Index" asp-route-status="Completed">
+                    Đã khám
+                </a>
+            </div>
+
+            <form class="dashboard-search-row" method="get"
+                  asp-area="Admin" asp-controller="Appointments" asp-action="Index">
+                <label class="search-field" for="quickAdminSearch">
+                    <svg class="icon"><use href="/images/icons.svg#search"></use></svg>
+                    <input id="quickAdminSearch" name="q" type="search"
+                           placeholder="Tìm khách hàng, thú cưng..." />
+                </label>
+                <button class="btn btn-outline btn-small" type="submit">Tìm kiếm</button>
+            </form>
+
+            <div class="table-wrap">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Khách hàng</th>
+                            <th>Thú cưng</th>
+                            <th>Bác sĩ khám</th>
+                            <th>Thời gian</th>
+                            <th>Trạng thái</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var appointment in Model.RecentAppointments)
+                        {
+                            var statusClass = appointment.Status switch
+                            {
+                                AppointmentStatus.Completed => "done",
+                                AppointmentStatus.InProgress => "progress",
+                                AppointmentStatus.Canceled => "cancel",
+                                _ => "pending"
+                            };
+
+                            <tr>
+                                <td class="id-cell">#@appointment.Id</td>
+                                <td>
+                                    <strong>@appointment.Customer.Name</strong>
+                                    <small>@appointment.Customer.Phone</small>
+                                </td>
+                                <td>
+                                    <span class="pet-table-cell">
+                                        <span class="pet-table-avatar">🐾</span>
+                                        @appointment.Pet.Name
+                                    </span>
+                                </td>
+                                <td>@(appointment.Veterinarian?.FullName ?? "Chưa phân công")</td>
+                                <td>@appointment.StartsAt.ToString("dd/MM HH:mm")</td>
+                                <td>
+                                    <span class="status-tag @statusClass">
+                                        @appointment.Status.ToVietnamese()
+                                    </span>
+                                </td>
+                                <td>
+                                    <a class="table-icon-link" title="Xem lịch hẹn"
+                                       asp-area="Admin" asp-controller="Appointments" asp-action="Index"
+                                       asp-route-day="@appointment.StartsAt.ToString("yyyy-MM-dd")">
+                                        <svg class="icon"><use href="/images/icons.svg#eye"></use></svg>
+                                        <span class="sr-only">Xem</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (Model.RecentAppointments.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="7" class="table-empty">
+                                    Chưa có lịch hẹn. Khi khách hàng đặt lịch, dữ liệu sẽ hiện ở đây.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="dashboard-table-footer">
+                <span>Hiển thị @Model.RecentAppointments.Count lịch gần nhất</span>
+                <a asp-area="Admin" asp-controller="Appointments" asp-action="Index">Xem tất cả →</a>
+            </div>
+        </section>
+
+        <section class="dashboard-mini-stats" aria-label="Tổng quan hệ thống">
+            <a asp-area="Admin" asp-controller="Customers" asp-action="Index">
+                <svg class="icon"><use href="/images/icons.svg#users"></use></svg>
+                <strong>@Model.Customers</strong>
+                <span>Khách hàng</span>
+            </a>
+            <a asp-area="Admin" asp-controller="Employees" asp-action="Index">
+                <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                <strong>@Model.Doctors</strong>
+                <span>Bác sĩ</span>
+            </a>
+            <a asp-area="Admin" asp-controller="Reports" asp-action="Index">
+                <svg class="icon"><use href="/images/icons.svg#receipt"></use></svg>
+                <strong>@Model.Revenue.ToString("N0") ₫</strong>
+                <span>Doanh thu đã thu</span>
+            </a>
+            <div>
+                <svg class="icon"><use href="/images/icons.svg#pill"></use></svg>
+                <strong>@Model.LowStock</strong>
+                <span>Loại thuốc gần hết</span>
+            </div>
+        </section>
+    </div>
+
+    <aside class="dashboard-secondary">
+        <section class="panel analytics-panel">
+            <div class="section-bar">
+                <h2>
+                    <svg class="icon"><use href="/images/icons.svg#chart"></use></svg>
+                    Thống kê khám bệnh
+                </h2>
+                <small>7 ngày gần ngày chọn</small>
+            </div>
+            <div class="mini-chart" role="img"
+                 aria-label="Số lịch hẹn theo từng ngày trong 7 ngày gần ngày được chọn">
+                @foreach (var point in Model.WeeklyVisits)
+                {
+                    var relative = 100m * point.Count / largestDailyCount;
+                    var height = Math.Max(4m, relative).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                    <div class="chart-slot">
+                        <span class="chart-value">@point.Count</span>
+                        <div class="chart-column">
+                            <div class="chart-bar" style="height: @(height)%"></div>
+                        </div>
+                        <span class="chart-day">@point.Day.ToString("dd/MM")</span>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="panel today-panel">
+            <div class="section-bar">
+                <h2>
+                    <svg class="icon"><use href="/images/icons.svg#clock"></use></svg>
+                    Lịch hẹn trong ngày (@Model.TodayAppointments)
+                </h2>
+                <a asp-area="Admin" asp-controller="Appointments" asp-action="Index"
+                   asp-route-day="@Model.SelectedDay.ToString("yyyy-MM-dd")">Xem tất cả</a>
+            </div>
+
+            @if (Model.TodaySchedule.Count == 0)
+            {
+                <p class="muted empty-today">Chưa có lịch hẹn cho ngày này.</p>
+            }
+            else
+            {
+                @foreach (var appointment in Model.TodaySchedule)
+                {
+                    <div class="today-item">
+                        <span class="today-time">@appointment.StartsAt.ToString("HH:mm")</span>
+                        <span class="today-pet">🐾</span>
+                        <div>
+                            <strong>@appointment.Pet.Name</strong>
+                            <small>@appointment.Customer.Name</small>
+                        </div>
+                        <span class="status-tag @(appointment.Status == AppointmentStatus.Completed ? "done" : appointment.Status == AppointmentStatus.InProgress ? "progress" : "pending")">
+                            @appointment.Status.ToVietnamese()
+                        </span>
+                    </div>
+                }
+            }
+        </section>
+
+        <section class="panel quick-links-panel">
+            <div class="section-bar">
+                <h2>
+                    <svg class="icon"><use href="/images/icons.svg#clipboard"></use></svg>
+                    Quản lý nhanh
+                </h2>
+            </div>
+            <a asp-area="Admin" asp-controller="Customers" asp-action="Index">
+                <svg class="icon"><use href="/images/icons.svg#users"></use></svg>
+                <span>Danh sách khách hàng</span>
+                <svg class="icon arrow"><use href="/images/icons.svg#arrow-right"></use></svg>
+            </a>
+            <a asp-area="Admin" asp-controller="Employees" asp-action="Index">
+                <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                <span>Quản lý bác sĩ và ca làm</span>
+                <svg class="icon arrow"><use href="/images/icons.svg#arrow-right"></use></svg>
+            </a>
+            <a asp-area="Admin" asp-controller="Reports" asp-action="Index">
+                <svg class="icon"><use href="/images/icons.svg#chart"></use></svg>
+                <span>Thống kê doanh thu</span>
+                <svg class="icon arrow"><use href="/images/icons.svg#arrow-right"></use></svg>
+            </a>
+        </section>
+    </aside>
+</div>

@@ -1,0 +1,338 @@
+@model List<ClinicService>
+
+@{
+    ViewData["Title"] = "Trang chủ";
+    var isCustomer = User.IsInRole(Roles.Customer);
+    var pets = ViewBag.Pets as List<Pet> ?? new List<Pet>();
+    var doctors = ViewBag.Doctors as List<Veterinarian> ?? new List<Veterinarian>();
+    var canBook = isCustomer && pets.Count > 0 && Model.Count > 0;
+}
+
+<section class="homepage-hero" aria-labelledby="home-title">
+    <div class="hero-story">
+        <div class="hero-topline">
+            <svg class="icon"><use href="/images/icons.svg#paw"></use></svg>
+            Phòng khám thú cưng Pets House
+        </div>
+
+        <h1 id="home-title">
+            Chăm sóc sức khỏe<br />
+            toàn diện cho thú cưng<br />
+            của bạn
+        </h1>
+
+        <p class="hero-description">
+            Đặt lịch khám nhanh chóng, được thăm khám bởi đội ngũ bác sĩ thú y
+            và nhận đơn thuốc phù hợp. Mọi thông tin đều được lưu trong hồ sơ của thú cưng.
+        </p>
+
+        <img class="hero-pets" src="~/images/pets-hero.png"
+             alt="Một chú chó Golden Retriever và mèo đang ngồi cạnh nhau" />
+
+        <div class="care-steps" aria-label="Các bước khám tại Pets House">
+            <div class="care-step">
+                <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                <div>
+                    <strong>Đặt lịch khám</strong>
+                    <small>Chọn thời gian phù hợp</small>
+                </div>
+            </div>
+            <div class="care-step">
+                <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                <div>
+                    <strong>Khám bệnh</strong>
+                    <small>Bác sĩ thăm khám</small>
+                </div>
+            </div>
+            <div class="care-step">
+                <svg class="icon"><use href="/images/icons.svg#pill"></use></svg>
+                <div>
+                    <strong>Kê thuốc</strong>
+                    <small>Hướng dẫn điều trị</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="booking-policy">
+            <svg class="icon"><use href="/images/icons.svg#check"></use></svg>
+            <span>
+                Đặt lịch <strong>miễn phí, không cần đặt cọc</strong>.
+                Thanh toán sau khi khám. Không cung cấp dịch vụ Spa.
+            </span>
+        </div>
+    </div>
+
+    <div class="quick-booking" id="dat-lich">
+        <div class="booking-heading">
+            <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+            <div>
+                <h2>Đặt lịch khám</h2>
+                <p>Nhanh chóng · Miễn phí đặt lịch · Không cần đặt cọc</p>
+            </div>
+        </div>
+
+        @if (canBook)
+        {
+            <form method="post"
+                  asp-area=""
+                  asp-controller="Appointments"
+                  asp-action="Create"
+                  class="booking-form"
+                  data-quick-booking>
+
+                <div class="booking-group-title">
+                    <svg class="icon"><use href="/images/icons.svg#paw"></use></svg>
+                    Thông tin thú cưng
+                </div>
+                <div class="booking-fields">
+                    <div class="form-field">
+                        <label for="quickPet">Thú cưng <span class="required">*</span></label>
+                        <select id="quickPet" name="PetId" required>
+                            <option value="">-- Chọn thú cưng --</option>
+                            @foreach (var pet in pets)
+                            {
+                                <option value="@pet.Id">@pet.Name (@pet.Species)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="quickService">Loại khám <span class="required">*</span></label>
+                        <select id="quickService" name="ServiceId" required>
+                            <option value="">-- Chọn loại khám --</option>
+                            @foreach (var service in Model)
+                            {
+                                <option value="@service.Id">
+                                    @service.Name – @service.Price.ToString("N0") ₫
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="booking-group-title">
+                    <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                    Thông tin lịch khám
+                </div>
+                <div class="booking-fields booking-fields-three">
+                    <div class="form-field">
+                        <label for="quickDoctor">Bác sĩ</label>
+                        <select id="quickDoctor" name="VeterinarianId">
+                            <option value="">Nhân viên phân công</option>
+                            @foreach (var doctor in doctors)
+                            {
+                                <option value="@doctor.Id">@doctor.FullName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="quickDate">Ngày khám <span class="required">*</span></label>
+                        <input type="date" id="quickDate"
+                               min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="form-field">
+                        <label for="quickTime">Giờ khám <span class="required">*</span></label>
+                        <select id="quickTime" required>
+                            <option value="">Chọn giờ</option>
+                            <option value="08:00">08:00</option>
+                            <option value="08:30">08:30</option>
+                            <option value="09:00">09:00</option>
+                            <option value="09:30">09:30</option>
+                            <option value="10:00">10:00</option>
+                            <option value="10:30">10:30</option>
+                            <option value="13:00">13:00</option>
+                            <option value="13:30">13:30</option>
+                            <option value="14:00">14:00</option>
+                            <option value="14:30">14:30</option>
+                            <option value="15:00">15:00</option>
+                            <option value="15:30">15:30</option>
+                            <option value="16:00">16:00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <input type="hidden" id="quickStartsAt" name="StartsAt" />
+
+                <div class="form-field">
+                    <label for="quickNotes">Lý do khám / triệu chứng</label>
+                    <textarea id="quickNotes" name="Notes" rows="3"
+                              maxlength="600"
+                              placeholder="Mô tả ngắn tình trạng của thú cưng..."></textarea>
+                </div>
+
+                <button class="btn booking-submit" type="submit">
+                    <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                    Xác nhận đặt lịch
+                </button>
+                <p class="booking-footnote">
+                    Lịch hẹn được kiểm tra trùng giờ và xác nhận tại hệ thống.
+                    Không thanh toán tại bước này.
+                </p>
+            </form>
+        }
+        else if (isCustomer)
+        {
+            <div class="booking-onboarding">
+                <svg class="icon onboarding-icon"><use href="/images/icons.svg#paw"></use></svg>
+                <h3>Chuẩn bị đặt lịch</h3>
+                <p>
+                    Bạn cần có ít nhất một hồ sơ thú cưng và một loại khám đang hoạt động
+                    để gửi yêu cầu đặt lịch.
+                </p>
+                <a class="btn booking-submit" asp-area="" asp-controller="Pets" asp-action="Create">
+                    <svg class="icon"><use href="/images/icons.svg#plus"></use></svg>
+                    Thêm hồ sơ thú cưng
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="booking-guest-preview">
+                <p class="guest-notice">
+                    Đăng nhập để điền thông tin và gửi yêu cầu đặt lịch khám.
+                </p>
+                <div class="booking-group-title">
+                    <svg class="icon"><use href="/images/icons.svg#user"></use></svg>
+                    Thông tin khách hàng
+                </div>
+                <div class="booking-fields">
+                    <div class="form-field">
+                        <label for="previewName">Họ và tên</label>
+                        <input id="previewName" placeholder="Họ tên của bạn" disabled />
+                    </div>
+                    <div class="form-field">
+                        <label for="previewPhone">Số điện thoại</label>
+                        <input id="previewPhone" placeholder="Nhập số điện thoại" disabled />
+                    </div>
+                </div>
+                <div class="booking-group-title">
+                    <svg class="icon"><use href="/images/icons.svg#paw"></use></svg>
+                    Thông tin thú cưng
+                </div>
+                <div class="booking-fields">
+                    <div class="form-field">
+                        <label for="previewPet">Tên thú cưng</label>
+                        <input id="previewPet" placeholder="Tên thú cưng" disabled />
+                    </div>
+                    <div class="form-field">
+                        <label for="previewSpecies">Loài</label>
+                        <select id="previewSpecies" disabled>
+                            <option>Chọn loài</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="booking-group-title">
+                    <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                    Thông tin lịch khám
+                </div>
+                <div class="booking-fields booking-fields-three">
+                    <div class="form-field">
+                        <label for="previewDoctor">Bác sĩ</label>
+                        <select id="previewDoctor" disabled><option>Chọn bác sĩ</option></select>
+                    </div>
+                    <div class="form-field">
+                        <label for="previewDate">Ngày khám</label>
+                        <input id="previewDate" placeholder="dd/mm/yyyy" disabled />
+                    </div>
+                    <div class="form-field">
+                        <label for="previewTime">Giờ khám</label>
+                        <select id="previewTime" disabled><option>Chọn giờ</option></select>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="previewNotes">Lý do khám</label>
+                    <textarea id="previewNotes" rows="2"
+                              placeholder="Triệu chứng của thú cưng..." disabled></textarea>
+                </div>
+                <a class="btn booking-submit" asp-area="" asp-controller="Account" asp-action="Login"
+                   asp-route-returnUrl="/Appointments/Create">
+                    <svg class="icon"><use href="/images/icons.svg#log-in"></use></svg>
+                    Đăng nhập để đặt lịch
+                </a>
+                <p class="booking-footnote">
+                    Chưa có tài khoản?
+                    <a asp-area="" asp-controller="Account" asp-action="Register">Đăng ký tại đây</a>
+                </p>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="home-below" aria-labelledby="why-title">
+    <div class="why-column">
+        <h2 id="why-title">
+            <svg class="icon"><use href="/images/icons.svg#paw"></use></svg>
+            Vì sao nên chọn Pets House?
+        </h2>
+        <div class="why-grid">
+            <article>
+                <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                <h3>Bác sĩ chuyên môn</h3>
+                <p>Thăm khám và chẩn đoán sức khỏe thú cưng.</p>
+            </article>
+            <article>
+                <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                <h3>Đặt lịch tiện lợi</h3>
+                <p>Chủ động lựa chọn lịch hẹn phù hợp.</p>
+            </article>
+            <article>
+                <svg class="icon"><use href="/images/icons.svg#pill"></use></svg>
+                <h3>Kê thuốc phù hợp</h3>
+                <p>Đơn thuốc được lưu và hướng dẫn rõ ràng.</p>
+            </article>
+            <article>
+                <svg class="icon"><use href="/images/icons.svg#heart"></use></svg>
+                <h3>Theo dõi bệnh án</h3>
+                <p>Xem lại lịch sử khám trên tài khoản cá nhân.</p>
+            </article>
+        </div>
+    </div>
+
+    <div class="process-column">
+        <h2>
+            <svg class="icon"><use href="/images/icons.svg#clipboard"></use></svg>
+            Quy trình khám tại Pets House
+        </h2>
+        <div class="process-grid">
+            <div><span><svg class="icon"><use href="/images/icons.svg#calendar"></use></svg></span><strong>1. Đặt lịch</strong></div>
+            <div><span><svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg></span><strong>2. Khám bệnh</strong></div>
+            <div><span><svg class="icon"><use href="/images/icons.svg#pill"></use></svg></span><strong>3. Kê thuốc</strong></div>
+            <div><span><svg class="icon"><use href="/images/icons.svg#heart"></use></svg></span><strong>4. Theo dõi</strong></div>
+        </div>
+    </div>
+</section>
+
+<section class="service-list-home" aria-labelledby="services-title">
+    <div class="section-head">
+        <div>
+            <span class="eyebrow">KHÁM VÀ CHĂM SÓC SỨC KHỎE</span>
+            <h2 id="services-title">Các loại khám đang phục vụ</h2>
+        </div>
+        <a asp-area="" asp-controller="Services" asp-action="Index">Xem tất cả →</a>
+    </div>
+
+    <div class="cards">
+        @if (Model.Count == 0)
+        {
+            <div class="empty">Chưa có loại khám nào được cấu hình trong hệ thống.</div>
+        }
+        else
+        {
+            @foreach (var service in Model.Take(3))
+            {
+                <article class="service-card">
+                    <span class="service-symbol">
+                        <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                    </span>
+                    <h3>@service.Name</h3>
+                    <p>@service.Description</p>
+                    <div class="service-footer">
+                        <strong>@service.Price.ToString("N0") ₫</strong>
+                        <a asp-area="" asp-controller="Appointments" asp-action="Create">
+                            Đặt lịch →
+                        </a>
+                    </div>
+                </article>
+            }
+        }
+    </div>
+</section>

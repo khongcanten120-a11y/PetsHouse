@@ -1,0 +1,125 @@
+@model List<WorkShift>
+
+@{
+    ViewData["Title"] = "Lịch làm việc của tôi";
+    var hasDoctor = ViewBag.HasDoctorProfile is true;
+    var now = DateTime.Now;
+    var stt = 0;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">BÁC SĨ / LỊCH LÀM VIỆC</span>
+        <h1>Lịch làm việc của tôi</h1>
+        <p>Đăng ký ca trực để nhân viên có thể phân công lịch khám phù hợp.</p>
+    </div>
+    <a class="btn" asp-area="Doctor"
+       asp-controller="Dashboard" asp-action="Index">
+        Xem ca khám
+    </a>
+</div>
+
+@if (!hasDoctor)
+{
+    <div class="panel">
+        <h2>Chưa có hồ sơ bác sĩ</h2>
+        <p>Tài khoản của bạn chưa liên kết với một hồ sơ bác sĩ đang hoạt động.
+           Vui lòng liên hệ quản trị viên.</p>
+    </div>
+}
+else
+{
+    <div class="panel">
+        <h2>Đăng ký ca làm việc</h2>
+        <p>Bác sĩ: <strong>@ViewBag.DoctorName</strong></p>
+        <p>Mỗi ca dài từ 30 phút đến 12 giờ, bắt đầu trong tương lai
+           và không trùng với ca đã đăng ký.</p>
+
+        <form asp-area="Doctor" asp-controller="WorkShifts"
+              asp-action="Create" method="post" class="form-stack form-inline">
+
+            <div>
+                <label for="startAt">Bắt đầu</label>
+                <input id="startAt" name="StartAt" type="datetime-local"
+                       step="900" required />
+            </div>
+
+            <div>
+                <label for="endAt">Kết thúc</label>
+                <input id="endAt" name="EndAt" type="datetime-local"
+                       step="900" required />
+            </div>
+
+            <button type="submit" class="btn">+ Đăng ký ca</button>
+        </form>
+    </div>
+
+    <div class="panel">
+        <h2>Danh sách ca làm việc</h2>
+        <p>Hiển thị các ca sắp tới và các ca trong 30 ngày gần đây (tối đa 200 ca).</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Ngày làm việc</th>
+                        <th>Giờ bắt đầu</th>
+                        <th>Giờ kết thúc</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var shift in Model)
+                    {
+                        stt++;
+                        <tr>
+                            <td>@stt</td>
+                            <td>@shift.StartAt.ToString("dd/MM/yyyy")</td>
+                            <td>@shift.StartAt.ToString("HH:mm")</td>
+                            <td>@shift.EndAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (shift.EndAt <= now)
+                                {
+                                    <span class="pill">Đã kết thúc</span>
+                                }
+                                else if (shift.StartAt <= now)
+                                {
+                                    <span class="pill">Đang làm việc</span>
+                                }
+                                else
+                                {
+                                    <span class="pill">Sắp diễn ra</span>
+                                }
+                            </td>
+                            <td>
+                                @if (shift.StartAt > now)
+                                {
+                                    <form asp-area="Doctor" asp-controller="WorkShifts"
+                                          asp-action="Cancel" asp-route-id="@shift.Id"
+                                          method="post">
+                                                                    <button class="btn btn-small" type="submit"
+                                                onclick="return confirm('Hủy ca làm việc này?');">
+                                            Hủy ca
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6">Chưa có ca làm việc nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

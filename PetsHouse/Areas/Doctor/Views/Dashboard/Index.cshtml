@@ -1,0 +1,96 @@
+@model PetsHouse.Models.DoctorQueueVm
+
+@{
+    ViewData["Title"] = "Danh sách khám bệnh";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">BÁC SĨ</span>
+        <h1>Danh sách khám bệnh</h1>
+        <p>Hàng chờ khám dành riêng cho @Model.DoctorName.</p>
+    </div>
+</div>
+
+<section class="panel" style="margin-bottom: 22px;">
+    <div class="section-bar">
+        <h2>Danh sách chờ khám (@Model.WaitingAppointments.Count)</h2>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Thú cưng</th>
+                    <th>Chủ nuôi</th>
+                    <th>Loại khám</th>
+                    <th>Ngày giờ</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model.WaitingAppointments)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.Customer.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="pill">Chờ khám</span></td>
+                        <td>
+                            <a class="btn btn-small"
+                               asp-area="Doctor"
+                               asp-controller="Exams"
+                               asp-action="Create"
+                               asp-route-id="@appointment.Id">
+                                Khám bệnh
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.WaitingAppointments.Count == 0)
+                {
+                    <tr><td colspan="7" class="table-empty">Chưa có lịch chờ khám được phân công.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-bar">
+        <h2>Các lịch khám khác (50 lịch gần nhất)</h2>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Thú cưng</th>
+                    <th>Chủ nuôi</th>
+                    <th>Ngày giờ</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model.OtherAppointments)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.Customer.Name</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="pill">@appointment.Status.ToVietnamese()</span></td>
+                    </tr>
+                }
+                @if (Model.OtherAppointments.Count == 0)
+                {
+                    <tr><td colspan="5" class="table-empty">Chưa có lịch khám khác.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

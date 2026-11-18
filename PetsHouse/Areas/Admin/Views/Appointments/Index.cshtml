@@ -1,0 +1,224 @@
+@model PetsHouse.Models.AdminAppointmentListVm
+
+@{
+    ViewData["Title"] = "Theo dõi và xác nhận lịch hẹn";
+    var dayText = Model.Day?.ToString("yyyy-MM-dd");
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN TRỊ / LỊCH KHÁM</span>
+        <h1>Lịch hẹn toàn hệ thống</h1>
+        <p>Xác nhận lịch mới và theo dõi ca khám của khách hàng.</p>
+    </div>
+</div>
+
+@if (TempData["Success"] is string successMessage)
+{
+    <div class="panel" style="border-left: 4px solid #15965d; margin-bottom: 16px;">
+        <strong style="color: #087d48;">@successMessage</strong>
+    </div>
+}
+
+@if (TempData["Error"] is string errorMessage)
+{
+    <div class="panel" style="border-left: 4px solid #db4a4a; margin-bottom: 16px;">
+        <strong style="color: #bd3030;">@errorMessage</strong>
+    </div>
+}
+
+<!-- Hàng chờ dùng chung với Staff, cập nhật khi tài khoản khác xác nhận. -->
+<section class="panel" style="margin-bottom: 22px;"
+         data-pets-pending
+         data-ids="@(string.Join(",", Model.PendingAppointments.Select(x => x.Id)))"
+         data-count="@Model.PendingTotal"
+         data-refresh-url="@Url.Action("PendingSnapshot", "Appointments", new { area = "Admin" })">
+    <div class="section-bar">
+        <h2>Lịch hẹn chờ xác nhận (@Model.PendingTotal)</h2>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã lịch</th>
+                    <th>Khách hàng</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Ngày giờ</th>
+                    <th>Bác sĩ / Phân công</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model.PendingAppointments)
+                {
+                    var available = Model.EligibleDoctors.TryGetValue(
+                        appointment.Id, out var choices)
+                        ? choices
+                        : new List<Veterinarian>();
+
+                    <tr>
+                        <td><strong>#@appointment.Id</strong></td>
+                        <td>@appointment.Customer.Name</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (available.Count > 0)
+                            {
+                                <form id="confirm-@appointment.Id" method="post"
+                                      asp-area="Admin"
+                                      asp-controller="Appointments"
+                                      asp-action="Confirm"
+                                      asp-route-id="@appointment.Id">
+                                    <select name="doctorId" required
+                                            aria-label="Bác sĩ khám lịch @appointment.Id">
+                                        <option value="">-- Chọn bác sĩ --</option>
+                                        @foreach (var doctor in available)
+                                        {
+                                            <option value="@doctor.Id"
+                                                    selected="@(appointment.VeterinarianId == doctor.Id)">
+                                                @doctor.FullName — Mã @doctor.Id
+                                            </option>
+                                        }
+                                    </select>
+                                </form>
+                            }
+                            else
+                            {
+                                <span style="color: #c23b3b; font-weight: 600;">
+                                    Chưa có bác sĩ trực phù hợp
+                                </span>
+                            }
+                        </td>
+                        <td><span class="pill">@appointment.Status.ToVietnamese()</span></td>
+                        <td>
+                            @if (available.Count > 0)
+                            {
+                                <button type="submit"
+                                        form="confirm-@appointment.Id"
+                                        class="btn btn-small"
+                                        onclick="return confirm('Xác nhận lịch hẹn và chuyển sang Chờ khám?')">
+                                    Xác nhận
+                                </button>
+                            }
+                            else
+                            {
+                                <a class="btn btn-outline btn-small"
+                                   asp-area="Staff" asp-controller="WorkShifts"
+                                   asp-action="Index"
+                                   asp-route-year="@appointment.StartsAt.Year"
+                                   asp-route-month="@appointment.StartsAt.Month">
+                                    Xếp ca bác sĩ
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+
+                @if (Model.PendingAppointments.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="table-empty">
+                            Không có lịch hẹn đang chờ xác nhận.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.PendingTotal > Model.PendingAppointments.Count)
+    {
+        <p>Đang hiển thị 100 yêu cầu sớm nhất. Hãy xử lý các yêu cầu này để xem những yêu cầu tiếp theo.</p>
+    }
+</section>
+
+<section class="panel">
+    <form method="get" asp-action="Index" class="filter-row">
+        <label for="searchAppointments">Tìm kiếm</label>
+        <input id="searchAppointments" type="search" name="q" value="@Model.Query"
+               placeholder="Khách hàng hoặc thú cưng" />
+
+        <label for="status">Trạng thái</label>
+        <select id="status" name="status">
+            <option value="">Tất cả</option>
+            @foreach (var state in Enum.GetValues<AppointmentStatus>())
+            {
+                <option value="@state" selected="@(Model.Status == state)">
+                    @state.ToVietnamese()
+                </option>
+            }
+        </select>
+
+        <label for="day">Ngày</label>
+        <input type="date" id="day" name="day" value="@dayText" />
+
+        <button type="submit" class="btn btn-small">Lọc</button>
+        <a class="btn btn-outline btn-small" asp-action="Index">Xóa lọc</a>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="section-bar">
+        <h2>Danh sách lịch hẹn (@Model.Total)</h2>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã lịch</th>
+                    <th>Khách hàng</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Bác sĩ</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model.Appointments)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Customer.Name</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@(appointment.Veterinarian?.FullName ?? "Chưa phân công")</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="pill">@appointment.Status.ToVietnamese()</span></td>
+                    </tr>
+                }
+
+                @if (Model.Appointments.Count == 0)
+                {
+                    <tr><td colspan="7" class="table-empty">Không có lịch phù hợp bộ lọc.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pager" aria-label="Phân trang lịch hẹn">
+        @if (Model.Page > 1)
+        {
+            <a asp-action="Index"
+               asp-route-status="@Model.Status"
+               asp-route-day="@dayText"
+               asp-route-q="@Model.Query"
+               asp-route-page="@(Model.Page - 1)">← Trước</a>
+        }
+        <span>Trang @(Model.Page) / @Model.TotalPages</span>
+        @if (Model.Page < Model.TotalPages)
+        {
+            <a asp-action="Index"
+               asp-route-status="@Model.Status"
+               asp-route-day="@dayText"
+               asp-route-q="@Model.Query"
+               asp-route-page="@(Model.Page + 1)">Sau →</a>
+        }
+    </nav>
+</section>
+
+<script src="~/js/pets-pending-sync.js" asp-append-version="true"></script>

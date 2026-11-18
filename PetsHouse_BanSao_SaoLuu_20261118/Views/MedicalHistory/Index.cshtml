@@ -1,0 +1,67 @@
+@model List<Appointment>
+
+@{
+    ViewData["Title"] = "Lịch sử khám";
+    var selectedPet = (int?)ViewBag.PetId;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">HỒ SƠ SỨC KHỎE</span>
+        <h1>Lịch sử khám của thú cưng</h1>
+        <p>Chỉ hiển thị bệnh án của thú cưng thuộc tài khoản bạn.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <form method="get" asp-action="Index" class="filter-row">
+        <label for="petId">Lọc theo thú cưng</label>
+        <select id="petId" name="petId">
+            <option value="">Tất cả thú cưng</option>
+            @foreach (Pet pet in ViewBag.Pets)
+            {
+                <option value="@pet.Id" selected="@(pet.Id == selectedPet)">
+                    @pet.Name
+                </option>
+            }
+        </select>
+        <button class="btn btn-small" type="submit">Lọc</button>
+    </form>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ngày khám</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Bác sĩ</th>
+                    <th>Chẩn đoán</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model)
+                {
+                    <tr>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy")</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@(appointment.Veterinarian?.FullName ?? "—")</td>
+                        <td>@appointment.MedicalRecord?.Diagnosis</td>
+                        <td>
+                            <a class="btn btn-small btn-outline" asp-action="Detail"
+                               asp-route-id="@appointment.Id">Xem bệnh án</a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="6">Chưa có bệnh án được lưu.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+@model Invoice
+
+@{
+    ViewData["Title"] = "Chi tiết hóa đơn";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">HÓA ĐƠN #@Model.Id</span>
+        <h1>Chi tiết hóa đơn sau khám</h1>
+        <p>@Model.Appointment.Customer.Name · @Model.Appointment.Pet.Name</p>
+    </div>
+    <a asp-action="Index">← Danh sách</a>
+</div>
+
+<div class="panel receipt">
+    <div class="receipt-heading">
+        <h2>Pets House – Hóa đơn khám thú y</h2>
+        <p>Trạng thái: @Model.Status.ToVietnamese()</p>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Nội dung</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.Description</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.UnitPrice.ToString("N0") ₫</td>
+                        <td>@((item.Quantity * item.UnitPrice).ToString("N0")) ₫</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="receipt-footer">Tổng cộng: @Model.Total.ToString("N0") ₫</p>
+    <p>Phương thức: @(Model.PaymentMethod ?? "Chưa thanh toán")</p>
+    <button class="btn btn-outline" type="button" onclick="window.print()">In hóa đơn</button>
+</div>

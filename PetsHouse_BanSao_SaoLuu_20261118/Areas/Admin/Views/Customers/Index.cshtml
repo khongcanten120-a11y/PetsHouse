@@ -1,0 +1,78 @@
+@model List<Customer>
+
+@{
+    ViewData["Title"] = "Quản lý khách hàng";
+    var currentPage = (int)ViewBag.Page;
+    var total = (int)ViewBag.Total;
+    var perPage = (int)ViewBag.PageSize;
+    var query = ViewBag.Query as string ?? "";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN TRỊ</span>
+        <h1>Quản lý khách hàng</h1>
+        <p>@total hồ sơ khách hàng lưu trong SQL Server.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <form method="get" class="filter-row">
+        <input type="search" name="q" value="@query"
+               aria-label="Tìm theo tên, email hoặc số điện thoại"
+               placeholder="Tìm tên, email, số điện thoại..." />
+        <button type="submit" class="btn btn-small">Tìm kiếm</button>
+        <a class="btn btn-outline btn-small" asp-action="Index">Xóa lọc</a>
+    </form>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Họ và tên</th>
+                    <th>Số điện thoại</th>
+                    <th>Email</th>
+                    <th>Số thú cưng</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var customer in Model)
+                {
+                    <tr>
+                        <td>#@customer.Id</td>
+                        <td><strong>@customer.Name</strong></td>
+                        <td>@customer.Phone</td>
+                        <td>@customer.User.Email</td>
+                        <td>@customer.Pets.Count</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@customer.Id"
+                               class="btn btn-small btn-outline">Chi tiết</a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="6">Không tìm thấy khách hàng.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pager" aria-label="Phân trang">
+        @if (currentPage > 1)
+        {
+            <a asp-action="Index" asp-route-q="@query"
+               asp-route-page="@(currentPage - 1)">← Trước</a>
+        }
+        <span>Trang @currentPage / @Math.Max(1, (int)Math.Ceiling((double)total / perPage))</span>
+        @if (currentPage * perPage < total)
+        {
+            <a asp-action="Index" asp-route-q="@query"
+               asp-route-page="@(currentPage + 1)">Sau →</a>
+        }
+    </nav>
+</div>

@@ -1,0 +1,40 @@
+@model List<ClinicService>
+
+@{
+    ViewData["Title"] = "Loại khám";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">KHÁM THÚ Y</span>
+        <h1>Loại khám thú y</h1>
+        <p>Các loại khám hiện đang được phòng khám cung cấp.</p>
+    </div>
+</div>
+
+<div class="cards">
+    @if (!Model.Any())
+    {
+        <div class="empty">Chưa có loại khám trong cơ sở dữ liệu.</div>
+    }
+    else
+    {
+        @foreach (var service in Model)
+        {
+            <article class="service-card">
+                <div class="service-symbol">
+                    <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                </div>
+                <h3>@service.Name</h3>
+                <p>@service.Description</p>
+                <div class="service-footer">
+                    <strong>@service.Price.ToString("N0") ₫</strong>
+                    <span>@service.DurationMinutes phút</span>
+                </div>
+                <a class="btn btn-block" asp-controller="Appointments" asp-action="Create">
+                    Đặt lịch khám
+                </a>
+            </article>
+        }
+    }
+</div>

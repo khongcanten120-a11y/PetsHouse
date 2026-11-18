@@ -1,0 +1,71 @@
+@model List<Appointment>
+
+@{
+    ViewData["Title"] = "Nhân viên – Lịch hẹn";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">NHÂN VIÊN</span>
+        <h1>Tiếp nhận &amp; phân công lịch</h1>
+        <p>Xác nhận sau khi kiểm tra ca làm và lịch trống của bác sĩ.</p>
+    </div>
+    <a class="btn" asp-area="Staff" asp-controller="Payments" asp-action="Index">
+        Thanh toán →
+    </a>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Khách hàng</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                    <th>Phân công</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Customer.Name</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM HH:mm")</td>
+                        <td><span class="pill">@appointment.Status.ToVietnamese()</span></td>
+                        <td>
+                            @if (appointment.Status == AppointmentStatus.Pending ||
+                                 appointment.Status == AppointmentStatus.Confirmed)
+                            {
+                                <form method="post" asp-action="Confirm"
+                                      asp-route-id="@appointment.Id" class="mini-form">
+                                    <select name="doctorId" required>
+                                        <option value="">Chọn bác sĩ</option>
+                                        @foreach (Veterinarian doctor in ViewBag.Doctors)
+                                        {
+                                            <option value="@doctor.Id"
+                                                    selected="@(appointment.VeterinarianId == doctor.Id)">
+                                                @doctor.FullName
+                                            </option>
+                                        }
+                                    </select>
+                                    <button class="btn btn-small" type="submit">Xác nhận</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="7">Chưa có lịch hẹn.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

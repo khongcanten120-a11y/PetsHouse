@@ -1,0 +1,33 @@
+@model CustomerProfileVm
+
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">TÀI KHOẢN</span>
+        <h1>Thông tin cá nhân</h1>
+        <p>Cập nhật thông tin liên hệ của chủ nuôi.</p>
+    </div>
+</div>
+
+<div class="panel narrow">
+    <form method="post" asp-action="Profile" class="form-stack">
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+
+        <label asp-for="Name">Họ và tên *</label>
+        <input asp-for="Name" autocomplete="name" />
+        <span asp-validation-for="Name" class="validation"></span>
+
+        <label asp-for="Phone">Số điện thoại *</label>
+        <input asp-for="Phone" autocomplete="tel" />
+        <span asp-validation-for="Phone" class="validation"></span>
+
+        <label asp-for="Address">Địa chỉ</label>
+        <textarea asp-for="Address" rows="3"></textarea>
+        <span asp-validation-for="Address" class="validation"></span>
+
+        <button class="btn" type="submit">Lưu thông tin</button>
+    </form>
+</div>

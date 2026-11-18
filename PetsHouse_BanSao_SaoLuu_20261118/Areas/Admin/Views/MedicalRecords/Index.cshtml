@@ -1,0 +1,61 @@
+@model List<MedicalRecord>
+
+@{
+    ViewData["Title"] = "Bệnh án điện tử";
+    var currentPage = (int)ViewBag.CurrentPage;
+    var total = (int)ViewBag.Total;
+    var perPage = (int)ViewBag.PageSize;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN TRỊ</span>
+        <h1>Bệnh án điện tử</h1>
+        <p>Danh sách hồ sơ đã được bác sĩ lưu sau khi khám.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã bệnh án</th>
+                    <th>Thú cưng</th>
+                    <th>Khách hàng</th>
+                    <th>Chẩn đoán</th>
+                    <th>Ngày lập</th>
+                    <th>Chi tiết</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var record in Model)
+                {
+                    <tr>
+                        <td>#@record.Id</td>
+                        <td>@record.Appointment.Pet.Name</td>
+                        <td>@record.Appointment.Customer.Name</td>
+                        <td>@record.Diagnosis</td>
+                        <td>@record.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td><a asp-action="Details" asp-route-id="@record.Id">Xem bệnh án →</a></td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="6">Chưa có bệnh án được lưu.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <nav class="pager">
+        @if (currentPage > 1)
+        {
+            <a asp-action="Index" asp-route-page="@(currentPage - 1)">← Trước</a>
+        }
+        <span>Trang @currentPage / @Math.Max(1, (int)Math.Ceiling((double)total / perPage))</span>
+        @if (currentPage * perPage < total)
+        {
+            <a asp-action="Index" asp-route-page="@(currentPage + 1)">Sau →</a>
+        }
+    </nav>
+</div>

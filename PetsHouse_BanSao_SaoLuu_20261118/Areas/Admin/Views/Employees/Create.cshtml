@@ -1,0 +1,10 @@
+@model StaffCreateVm
+@{ViewData["Title"]="Tạo tài khoản nhân viên";}
+<div class="page-title"><h1>Tạo tài khoản nội bộ</h1><a asp-action="Index">← Danh sách</a></div>
+<div class="panel narrow"><form method="post" asp-action="Create" class="form-stack"><div asp-validation-summary="All" class="validation"></div>
+<label asp-for="FullName">Họ tên</label><input asp-for="FullName"/>
+<label asp-for="Email">Email</label><input asp-for="Email"/>
+<label asp-for="TemporaryPassword">Mật khẩu tạm (chữ hoa, số, ký tự đặc biệt)</label><input asp-for="TemporaryPassword" type="password"/>
+<label asp-for="Role">Vai trò</label><select asp-for="Role"><option value="Staff">Nhân viên</option><option value="Doctor">Bác sĩ</option><option value="Warehouse">Quản lý kho</option></select>
+<label asp-for="Specialty">Chuyên môn (bác sĩ)</label><input asp-for="Specialty"/>
+<button class="btn">Tạo tài khoản</button></form></div>

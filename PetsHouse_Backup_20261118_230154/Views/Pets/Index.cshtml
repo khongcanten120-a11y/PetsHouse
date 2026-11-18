@@ -1,0 +1,43 @@
+@model List<Pet>
+
+@{
+    ViewData["Title"] = "Thú cưng của tôi";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">HỒ SƠ CỦA TÔI</span>
+        <h1>Thú cưng của tôi</h1>
+        <p>Quản lý thông tin từng người bạn nhỏ.</p>
+    </div>
+    <a class="btn" asp-action="Create">+ Thêm thú cưng</a>
+</div>
+
+<div class="cards">
+    @if (Model.Count == 0)
+    {
+        <div class="empty">Bạn chưa có hồ sơ thú cưng. Hãy thêm thú cưng đầu tiên nhé.</div>
+    }
+    else
+    {
+        @foreach (var pet in Model)
+        {
+            <article class="pet-card">
+                <div class="pet-avatar">
+                    @(pet.Species.ToLower().Contains("mèo") ? "🐱" : "🐶")
+                </div>
+                <h3>@pet.Name</h3>
+                <p>@pet.Species · @pet.Breed</p>
+                <p>@pet.Notes</p>
+                <div class="card-actions">
+                    <a class="btn btn-small btn-outline" asp-action="Edit"
+                       asp-route-id="@pet.Id">Sửa hồ sơ</a>
+                    <form method="post" asp-action="Delete" asp-route-id="@pet.Id"
+                          onsubmit="return confirm('Xóa hồ sơ này?');">
+                        <button type="submit" class="btn btn-small btn-danger">Xóa</button>
+                    </form>
+                </div>
+            </article>
+        }
+    }
+</div>

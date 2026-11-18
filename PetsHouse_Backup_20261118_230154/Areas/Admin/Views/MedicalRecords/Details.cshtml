@@ -1,0 +1,47 @@
+@model MedicalRecord
+
+@{
+    ViewData["Title"] = "Chi tiết bệnh án";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">BỆNH ÁN #@Model.Id</span>
+        <h1>Hồ sơ khám – @Model.Appointment.Pet.Name</h1>
+        <p>Thời điểm lưu: @Model.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+    </div>
+    <a asp-action="Index">← Trở về danh sách</a>
+</div>
+
+<div class="panel">
+    <h2>Thông tin khám bệnh</h2>
+    <div class="detail-grid">
+        <div><h3>Triệu chứng</h3><p>@Model.Symptoms</p></div>
+        <div><h3>Chẩn đoán</h3><p>@Model.Diagnosis</p></div>
+        <div><h3>Điều trị</h3><p>@(Model.Treatment ?? "Chưa ghi nhận")</p></div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Thuốc được kê</h2>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Thuốc</th><th>Số lượng</th><th>Hướng dẫn</th><th>Cấp phát</th></tr></thead>
+            <tbody>
+                @foreach (var item in Model.Prescriptions)
+                {
+                    <tr>
+                        <td>@item.Medicine.Name</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Directions</td>
+                        <td>@(item.DispensedAtUtc.HasValue ? "Đã cấp" : "Chưa cấp")</td>
+                    </tr>
+                }
+                @if (!Model.Prescriptions.Any())
+                {
+                    <tr><td colspan="4">Không có thuốc được kê.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

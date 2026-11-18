@@ -1,0 +1,66 @@
+@model List<ClinicService>
+
+@{
+    ViewData["Title"] = "Quản lý loại khám";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">ADMIN</span>
+        <h1>Quản lý loại khám</h1>
+    </div>
+    <a class="btn" asp-action="Create">+ Thêm loại khám</a>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Loại khám</th>
+                    <th>Giá</th>
+                    <th>Thời lượng</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var service in Model)
+                {
+                    <tr>
+                        <td>@service.Id</td>
+                        <td>
+                            <strong>@service.Name</strong>
+                            <div class="muted">@service.Description</div>
+                        </td>
+                        <td>@service.Price.ToString("N0") ₫</td>
+                        <td>@service.DurationMinutes phút</td>
+                        <td>
+                            <span class="pill">
+                                @(service.IsActive ? "Hoạt động" : "Ngưng")
+                            </span>
+                        </td>
+                        <td>
+                            <a class="btn btn-small btn-outline" asp-action="Edit"
+                               asp-route-id="@service.Id">Sửa</a>
+                            @if (service.IsActive)
+                            {
+                                <form method="post" asp-action="Disable"
+                                      asp-route-id="@service.Id" class="inline">
+                                    <button type="submit" class="btn btn-small btn-danger">
+                                        Ngưng
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="6">Chưa có loại khám nào.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,339 @@
+@using PetsHouse.Models
+
+@{
+    var signedIn = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole(Roles.Admin);
+    var isStaff = User.IsInRole(Roles.Staff);
+    var isDoctor = User.IsInRole(Roles.Doctor);
+    var isWarehouse = User.IsInRole(Roles.Warehouse);
+    var isCustomer = User.IsInRole(Roles.Customer);
+    var internalUser = signedIn && (isAdmin || isStaff || isDoctor || isWarehouse);
+
+    var area = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var displayName = User.Identity?.Name ?? "Tài khoản";
+    var roleTitle = isAdmin ? "Quản trị viên" :
+        isStaff ? "Nhân viên" :
+        isDoctor ? "Bác sĩ thú y" :
+        isWarehouse ? "Quản lý kho" : "Khách hàng";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Pets House – Hệ thống đặt lịch khám, khám bệnh và kê thuốc cho thú cưng." />
+    <title>@ViewData["Title"] | Pets House</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@(internalUser ? "mode-admin" : "mode-public")">
+
+@if (internalUser)
+{
+    <div class="admin-shell" id="adminShell">
+        <aside class="admin-sidebar" id="adminSidebar" aria-label="Điều hướng nội bộ">
+            <a class="sidebar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <span class="sidebar-logo">
+                    <svg class="icon icon-paw"><use href="/images/icons.svg#paw"></use></svg>
+                </span>
+                <span class="brand-words">
+                    <strong>Pets House</strong>
+                    <small>Phòng khám thú cưng</small>
+                </span>
+            </a>
+
+            <nav class="sidebar-menu" aria-label="Menu quản lý">
+                @if (isAdmin)
+                {
+                    <a class="@(area == "Admin" && controller == "Dashboard" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#home"></use></svg>
+                        <span>Tổng quan</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "Customers" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Customers" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#users"></use></svg>
+                        <span>Quản lý khách hàng</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "Pets" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Pets" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#paw"></use></svg>
+                        <span>Hồ sơ thú cưng</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "Appointments" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Appointments" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                        <span>Lịch hẹn khám</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "MedicalRecords" ? "active" : "")"
+                       asp-area="Admin" asp-controller="MedicalRecords" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                        <span>Bệnh án điện tử</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "Medicines" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Medicines" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#pill"></use></svg>
+                        <span>Quản lý thuốc</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "Invoices" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Invoices" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#receipt"></use></svg>
+                        <span>Hóa đơn</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "Services" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Services" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                        <span>Loại khám</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "Employees" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Employees" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#user"></use></svg>
+                        <span>Nhân viên &amp; bác sĩ</span>
+                    </a>
+                    <a class="@(area == "Admin" && controller == "Reports" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Reports" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#chart"></use></svg>
+                        <span>Thống kê &amp; báo cáo</span>
+                    </a>
+                }
+                @if (isStaff)
+                {
+                    <a class="@(area == "Staff" && controller == "Reception" ? "active" : "")"
+       asp-area="Staff" asp-controller="Reception" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#users"></use></svg>
+        <span>Tiếp nhận khách hàng</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "Appointments" ? "active" : "")"
+       asp-area="Staff" asp-controller="Appointments" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+        <span>Đặt &amp; quản lý lịch khám</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "Dashboard" ? "active" : "")"
+       asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+        <span>Xác nhận &amp; phân công bác sĩ</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "WorkShifts" ? "active" : "")"
+       asp-area="Staff" asp-controller="WorkShifts" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+        <span>Xếp lịch bác sĩ</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "Payments" ? "active" : "")"
+       asp-area="Staff" asp-controller="Payments" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#receipt"></use></svg>
+        <span>Thanh toán</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "Invoices" ? "active" : "")"
+       asp-area="Staff" asp-controller="Invoices" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#receipt"></use></svg>
+        <span>Tra cứu &amp; in hóa đơn</span>
+    </a>
+
+                }
+                @if (isDoctor)
+                {
+                    <!-- Danh sách khám bệnh -->
+                    <a href="/Doctor/Dashboard/Index"
+                    class="@(area == "Doctor" && controller == "Dashboard"
+                        ? "active" : "")">
+
+                        <svg class="icon">
+                            <use href="/images/icons.svg#stethoscope"></use>
+                        </svg>
+
+                        <span>Danh sách khám bệnh</span>
+                    </a>
+
+                    <!-- Lịch làm việc của bác sĩ -->
+                    <a href="/Doctor/WorkShifts/Index"
+                    class="@(area == "Doctor" && controller == "WorkShifts"
+                        ? "active" : "")">
+
+                        <svg class="icon">
+                            <use href="/images/icons.svg#calendar"></use>
+                        </svg>
+
+                        <span>Lịch làm việc của tôi</span>
+                    </a>
+                }
+                @if (isWarehouse)
+                {
+                    <a class="@(controller == "Dashboard" ? "active" : "")"
+                       asp-area="Warehouse" asp-controller="Dashboard" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#pill"></use></svg>
+                        <span>Quản lý thuốc</span>
+                    </a>
+                    <a class="@(controller == "Movements" ? "active" : "")"
+                       asp-area="Warehouse" asp-controller="Movements" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#package"></use></svg>
+                        <span>Nhập xuất kho</span>
+                    </a>
+                }
+            </nav>
+
+            <div class="sidebar-bottom">
+                <img src="~/images/pets-sidebar.png" alt="Chó và mèo tại Pets House" />
+                <span>Chăm sóc bằng sự tận tâm</span>
+            </div>
+        </aside>
+
+        <div class="admin-main">
+            <header class="admin-topbar">
+                <button class="icon-button sidebar-toggle" id="sidebarToggle"
+                        type="button" aria-label="Mở hoặc thu gọn thanh điều hướng"
+                        aria-expanded="false" aria-controls="adminSidebar">
+                    <svg class="icon"><use href="/images/icons.svg#menu"></use></svg>
+                </button>
+                <div class="admin-topbar-heading">Hệ thống quản lý phòng khám thú cưng PetsHouse</div>
+                <div class="admin-topbar-actions">
+                    @if (isAdmin)
+                    {
+                        <a class="icon-button" asp-area="Admin" asp-controller="Appointments"
+                           asp-action="Index" asp-route-status="Pending"
+                           title="Lịch đang chờ xác nhận" aria-label="Xem lịch chờ xác nhận">
+                            <svg class="icon"><use href="/images/icons.svg#bell"></use></svg>
+                        </a>
+                    }
+                    <button class="icon-button theme-toggle" id="themeBtn" type="button"
+                            aria-label="Đổi chế độ sáng tối">
+                        <svg class="icon"><use href="/images/icons.svg#moon"></use></svg>
+                    </button>
+                    <span class="admin-avatar" aria-hidden="true">
+                        <svg class="icon"><use href="/images/icons.svg#user"></use></svg>
+                    </span>
+                    <div class="admin-user-meta">
+                        <strong>@roleTitle</strong>
+                        <small>@displayName</small>
+                    </div>
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                        <button class="logout-icon" type="submit" title="Đăng xuất" aria-label="Đăng xuất">
+                            <svg class="icon"><use href="/images/icons.svg#log-out"></use></svg>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="admin-content" id="main-content">
+                @if (TempData["Success"] is string success)
+                {
+                    <div class="alert success" role="status">@success</div>
+                }
+                @if (TempData["Error"] is string error)
+                {
+                    <div class="alert danger" role="alert">@error</div>
+                }
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    <header class="public-header">
+        <div class="shell public-nav">
+            <a class="public-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <span class="brand-paw">
+                    <svg class="icon"><use href="/images/icons.svg#paw"></use></svg>
+                </span>
+                <span>
+                    <strong>Pets House</strong>
+                    <small>Phòng khám thú cưng</small>
+                </span>
+            </a>
+
+            <button id="mobileMenu" class="icon-button mobile-menu-button"
+                    type="button" aria-expanded="false" aria-controls="topNav"
+                    aria-label="Mở menu">
+                <svg class="icon"><use href="/images/icons.svg#menu"></use></svg>
+            </button>
+
+            <nav class="public-nav-links" id="topNav" aria-label="Điều hướng chính">
+                <a class="@(controller == "Home" ? "active" : "")"
+                   asp-area="" asp-controller="Home" asp-action="Index">
+                    <svg class="icon"><use href="/images/icons.svg#home"></use></svg>
+                    Trang chủ
+                </a>
+                <a class="@(controller == "Services" ? "active" : "")"
+                   asp-area="" asp-controller="Services" asp-action="Index">
+                    <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+                    Loại khám
+                </a>
+                @if (isCustomer)
+                {
+                    <a class="@(controller == "Appointments" ? "active" : "")"
+                       asp-area="" asp-controller="Appointments" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                        Lịch hẹn
+                    </a>
+                    <a asp-area="" asp-controller="Pets" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#paw"></use></svg>
+                        Hồ sơ thú cưng
+                    </a>
+                    <a asp-area="" asp-controller="MedicalHistory" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#file"></use></svg>
+                        Bệnh án
+                    </a>
+                    <a asp-area="" asp-controller="Customer" asp-action="Index">
+                        <svg class="icon"><use href="/images/icons.svg#user"></use></svg>
+                        Tài khoản
+                    </a>
+                }
+                else
+                {
+                    <a asp-area="" asp-controller="Appointments" asp-action="Create">
+                        <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+                        Đặt lịch khám
+                    </a>
+                }
+            </nav>
+
+            <div class="public-nav-actions">
+                <button class="icon-button theme-toggle" id="themeBtn" type="button"
+                        aria-label="Đổi chế độ sáng tối">
+                    <svg class="icon"><use href="/images/icons.svg#moon"></use></svg>
+                </button>
+                @if (signedIn)
+                {
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="outline-login">
+                            <svg class="icon"><use href="/images/icons.svg#log-out"></use></svg>
+                            Đăng xuất
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a class="outline-login" asp-area="" asp-controller="Account" asp-action="Login">
+                        <svg class="icon"><use href="/images/icons.svg#user"></use></svg>
+                        Đăng nhập
+                    </a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main class="public-content shell" id="main-content">
+        @if (TempData["Success"] is string success)
+        {
+            <div class="alert success" role="status">@success</div>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <div class="alert danger" role="alert">@error</div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell footer-flex">
+            <span><strong>Pets House</strong> · Đặt lịch khám – Khám bệnh – Kê thuốc</span>
+            <span>Không thu tiền khi đặt lịch · Thanh toán sau khám</span>
+        </div>
+    </footer>
+}
+
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

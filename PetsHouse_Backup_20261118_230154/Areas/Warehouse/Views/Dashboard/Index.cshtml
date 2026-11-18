@@ -1,0 +1,97 @@
+@model List<Medicine>
+
+@{
+    ViewData["Title"] = "Kho thuốc";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN LÝ KHO</span>
+        <h1>Kho thuốc và vật tư</h1>
+        <p>Theo dõi số lượng thực tế từ cơ sở dữ liệu.</p>
+    </div>
+    <a class="btn" asp-action="Create">+ Thêm thuốc</a>
+</div>
+
+<div class="panel">
+    <h2>Danh mục và nhập kho</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Thuốc</th>
+                    <th>Đơn vị</th>
+                    <th>Giá</th>
+                    <th>Tồn kho</th>
+                    <th>Hạn dùng</th>
+                    <th>Nhập kho</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var medicine in Model)
+                {
+                    <tr>
+                        <td>#@medicine.Id</td>
+                        <td><strong>@medicine.Name</strong></td>
+                        <td>@medicine.Unit</td>
+                        <td>@medicine.UnitPrice.ToString("N0") ₫</td>
+                        <td>
+                            <span class="pill @(medicine.QuantityOnHand <= medicine.ReorderLevel ? "warning" : "")">
+                                @medicine.QuantityOnHand
+                            </span>
+                        </td>
+                        <td>@(medicine.ExpiresOn?.ToString("dd/MM/yyyy") ?? "—")</td>
+                        <td>
+                            <form method="post" asp-action="Receive" class="mini-form">
+                                <input name="MedicineId" type="hidden" value="@medicine.Id" />
+                                <input name="Quantity" type="number" min="1" value="1"
+                                       required class="qty-input" />
+                                <button class="btn btn-small" type="submit">Nhập</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="7">Kho chưa có thuốc.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Đơn thuốc chờ cấp phát</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã chi tiết</th>
+                    <th>Thuốc</th>
+                    <th>Số lượng</th>
+                    <th>Ca khám</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (PrescriptionItem item in ViewBag.Prescriptions)
+                {
+                    <tr>
+                        <td>#@item.Id</td>
+                        <td>@item.Medicine.Name</td>
+                        <td>@item.Quantity</td>
+                        <td>#@item.MedicalRecord.AppointmentId</td>
+                        <td>
+                            <form method="post" asp-action="Dispense"
+                                  asp-route-id="@item.Id"
+                                  onsubmit="return confirm('Xác nhận cấp phát và trừ kho?');">
+                                <button class="btn btn-small" type="submit">Cấp phát</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

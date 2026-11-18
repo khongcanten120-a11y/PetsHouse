@@ -1,0 +1,64 @@
+@model AppointmentVm
+
+@{
+    ViewData["Title"] = "Đặt lịch khám";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">ĐĂNG KÝ KHÁM</span>
+        <h1>Đặt lịch khám cho thú cưng</h1>
+        <p>Kiểm tra lịch bác sĩ trước khi lưu. Không cần đặt cọc.</p>
+    </div>
+</div>
+
+<div class="panel narrow">
+    <form method="post" asp-action="Create" class="form-stack">
+        <div asp-validation-summary="All" class="validation"></div>
+
+        <label asp-for="PetId">Thú cưng</label>
+        <select asp-for="PetId">
+            <option value="0">-- Chọn thú cưng --</option>
+            @foreach (Pet pet in ViewBag.Pets)
+            {
+                <option value="@pet.Id">@pet.Name (@pet.Species)</option>
+            }
+        </select>
+        <span asp-validation-for="PetId" class="validation"></span>
+
+        <label asp-for="ServiceId">Loại khám</label>
+        <select asp-for="ServiceId">
+            <option value="0">-- Chọn loại khám --</option>
+            @foreach (ClinicService service in ViewBag.Services)
+            {
+                <option value="@service.Id">
+                    @service.Name – @service.Price.ToString("N0") ₫
+                </option>
+            }
+        </select>
+        <span asp-validation-for="ServiceId" class="validation"></span>
+
+        <label asp-for="VeterinarianId">Bác sĩ (không bắt buộc)</label>
+        <select asp-for="VeterinarianId">
+            <option value="">Nhân viên phân công sau</option>
+            @foreach (Veterinarian doctor in ViewBag.Doctors)
+            {
+                <option value="@doctor.Id">
+                    @doctor.FullName – @doctor.Specialty
+                </option>
+            }
+        </select>
+
+        <label asp-for="StartsAt">Ngày và giờ khám</label>
+        <input asp-for="StartsAt" type="datetime-local" />
+        <span asp-validation-for="StartsAt" class="validation"></span>
+
+        <label asp-for="Notes">Triệu chứng / ghi chú</label>
+        <textarea asp-for="Notes" rows="4"></textarea>
+        <span asp-validation-for="Notes" class="validation"></span>
+
+        <button class="btn" type="submit">
+            Xác nhận đặt lịch →
+        </button>
+    </form>
+</div>

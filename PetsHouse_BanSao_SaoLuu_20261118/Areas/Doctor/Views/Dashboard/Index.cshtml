@@ -1,0 +1,54 @@
+@model List<Appointment>
+
+@{
+    ViewData["Title"] = "Ca khám của bác sĩ";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">BÁC SĨ</span>
+        <h1>Danh sách ca khám</h1>
+        <p>Chỉ những ca đã được phân công cho tài khoản bác sĩ của bạn.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Thú cưng</th>
+                    <th>Chủ nuôi</th>
+                    <th>Ngày giờ</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.Customer.Name</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="pill">@appointment.Status.ToVietnamese()</span></td>
+                        <td>
+                            @if (appointment.Status == AppointmentStatus.Waiting)
+                            {
+                                <a class="btn btn-small" asp-area="Doctor"
+                                   asp-controller="Exams" asp-action="Create"
+                                   asp-route-id="@appointment.Id">Khám bệnh</a>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="6">Chưa có ca khám được phân công.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

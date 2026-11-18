@@ -1,0 +1,386 @@
+
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@model PaymentVm
+
+@{
+    ViewData["Title"] = "Thanh toán";
+
+    var appointment = (Appointment)ViewBag.Appointment;
+    decimal total = (decimal)ViewBag.Total;
+
+    // Thông tin tài khoản ngân hàng từ appsettings.json
+    var bankBin = (Configuration["VietQr:BankBin"] ?? "").Trim();
+    var accountNumber = (Configuration["VietQr:AccountNumber"] ?? "").Trim();
+    var accountName = (Configuration["VietQr:AccountName"] ?? "").Trim();
+
+    // Số tiền cố định theo tổng hóa đơn
+    var amountVnd = total.ToString(
+        "0",
+        System.Globalization.CultureInfo.InvariantCulture
+    );
+
+    // Nội dung chuyển khoản theo mã ca khám
+    var transferDescription = $"PETSHOUSE KHAM {appointment.Id}";
+
+    // Kiểm tra cấu hình ngân hàng
+    var bankReady =
+        !string.IsNullOrWhiteSpace(bankBin) &&
+        !string.IsNullOrWhiteSpace(accountNumber) &&
+        !string.IsNullOrWhiteSpace(accountName) &&
+        total > 0;
+
+    // QR luôn dùng tổng tiền hóa đơn từ server
+    var qrUrl = bankReady
+        ? $"https://img.vietqr.io/image/{Uri.EscapeDataString(bankBin)}-{Uri.EscapeDataString(accountNumber)}-compact2.png"
+          + $"?amount={amountVnd}"
+          + $"&addInfo={Uri.EscapeDataString(transferDescription)}"
+          + $"&accountName={Uri.EscapeDataString(accountName)}"
+        : "";
+}
+
+<div class="page-title">
+    <h1>Thanh toán ca khám #@appointment.Id</h1>
+    <a asp-action="Index">← Danh sách</a>
+</div>
+
+<div class="panel narrow">
+
+    <div class="invoice-total">
+        <span>
+            Thú cưng:
+            <strong>@appointment.Pet.Name</strong>
+        </span>
+
+        <strong>@total.ToString("N0") ₫</strong>
+
+        <p>Phí dịch vụ + các thuốc đã kê.</p>
+    </div>
+
+    <form id="paymentForm"
+          method="post"
+          asp-action="Pay"
+          class="form-stack">
+
+        @Html.AntiForgeryToken()
+
+        <input asp-for="AppointmentId" type="hidden" />
+
+        <div asp-validation-summary="All"
+             class="validation">
+        </div>
+
+        <!-- Phương thức thanh toán -->
+        <label asp-for="Method">
+            Phương thức thanh toán
+        </label>
+
+        <select asp-for="Method" id="paymentMethod">
+            <option value="Tiền mặt">Tiền mặt</option>
+            <option value="Chuyển khoản">Chuyển khoản</option>
+        </select>
+
+        <!-- QR chuyển khoản -->
+        <div id="bankTransferBox"
+             class="pets-qr-box"
+             style="display: none;">
+
+            <h3>Quét mã QR để chuyển khoản</h3>
+
+            @if (bankReady)
+            {
+                <div class="pets-qr-image">
+                    <img src="@qrUrl"
+                         alt="Mã VietQR thanh toán ca khám #@appointment.Id"
+                         width="280"
+                         loading="lazy"
+                         referrerpolicy="no-referrer" />
+                </div>
+
+                <div class="pets-qr-details">
+
+                    <div>
+                        <strong>Mã ngân hàng:</strong>
+                        <span>@bankBin</span>
+                    </div>
+
+                    <div>
+                        <strong>Số tài khoản:</strong>
+                        <span>@accountNumber</span>
+                    </div>
+
+                    <div>
+                        <strong>Chủ tài khoản:</strong>
+                        <span>@accountName</span>
+                    </div>
+
+                    <div>
+                        <strong>Số tiền cần chuyển:</strong>
+                        <span class="pets-amount">
+                            @total.ToString("N0") ₫
+                        </span>
+                    </div>
+
+                    <div>
+                        <strong>Nội dung chuyển khoản:</strong>
+                        <span>@transferDescription</span>
+                    </div>
+
+                </div>
+
+                <p class="pets-qr-note">
+                    Quét mã bằng ứng dụng ngân hàng.
+                    Kiểm tra tên người nhận, số tài khoản
+                    và số tiền trước khi xác nhận chuyển khoản.
+                </p>
+
+                <label class="pets-qr-confirm">
+                    <input id="transferChecked"
+                           type="checkbox" />
+
+                    <span>
+                        Tôi đã kiểm tra và xác nhận
+                        tiền đã vào tài khoản ngân hàng.
+                    </span>
+                </label>
+            }
+            else
+            {
+                <p class="pets-qr-warning">
+                    Chưa cấu hình tài khoản VietQR.
+
+                    Vui lòng kiểm tra BankBin,
+                    AccountNumber và AccountName
+                    trong appsettings.json.
+                </p>
+            }
+        </div>
+
+        <!-- Số tiền thanh toán -->
+        <label asp-for="AmountTendered">
+            Số tiền thực nhận (VND)
+        </label>
+
+        <input asp-for="AmountTendered"
+               id="amountTendered"
+               type="number"
+               min="0"
+               step="1"
+               required />
+
+        <p id="amountNote"
+           class="pets-amount-note"
+           style="display: none;">
+            Số tiền chuyển khoản được cố định
+            theo tổng hóa đơn.
+        </p>
+
+        <button class="btn"
+                type="submit">
+            Xác nhận thanh toán
+        </button>
+
+    </form>
+
+</div>
+
+<style>
+    .pets-qr-box {
+        margin-top: 14px;
+        padding: 18px;
+        border: 1px solid #dce8f5;
+        border-radius: 14px;
+        background: #f7fbff;
+        text-align: center;
+    }
+
+    .pets-qr-box h3 {
+        margin: 0 0 16px;
+        color: #102b56;
+        font-size: 18px;
+    }
+
+    .pets-qr-image {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 18px;
+    }
+
+    .pets-qr-image img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        background: #ffffff;
+    }
+
+    .pets-qr-details {
+        padding: 14px;
+        background: #ffffff;
+        border: 1px solid #e2eaf5;
+        border-radius: 10px;
+        text-align: left;
+    }
+
+    .pets-qr-details div {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 7px 0;
+        border-bottom: 1px solid #eef2f7;
+        word-break: break-word;
+    }
+
+    .pets-qr-details div:last-child {
+        border-bottom: none;
+    }
+
+    .pets-amount {
+        color: #0875cf;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .pets-qr-note {
+        margin-top: 14px;
+        color: #546b89;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .pets-qr-warning {
+        color: #b45309;
+        font-weight: 600;
+    }
+
+    .pets-qr-confirm {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 14px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .pets-qr-confirm input {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        margin-top: 3px;
+    }
+
+    #amountTendered[readonly] {
+        background: #f0f5fb;
+        color: #1262ad;
+        font-weight: 700;
+        cursor: not-allowed;
+    }
+
+    .pets-amount-note {
+        color: #0875cf;
+        font-size: 13px;
+        margin-top: -5px;
+    }
+</style>
+
+<script>
+    (() => {
+        const form = document.getElementById('paymentForm');
+
+        const method = document.getElementById('paymentMethod');
+
+        const amountTendered =
+            document.getElementById('amountTendered');
+
+        const bankBox =
+            document.getElementById('bankTransferBox');
+
+        const transferChecked =
+            document.getElementById('transferChecked');
+
+        const amountNote =
+            document.getElementById('amountNote');
+
+        // Tổng tiền cố định do server tính toán
+        const invoiceAmount = '@amountVnd';
+
+        const isQrConfigured =
+            @(bankReady.ToString().ToLowerInvariant());
+
+        function updatePaymentUi() {
+            const isBankTransfer =
+                method.value === 'Chuyển khoản';
+
+            // Hiển thị QR nếu chọn chuyển khoản
+            bankBox.style.display =
+                isBankTransfer ? 'block' : 'none';
+
+            amountNote.style.display =
+                isBankTransfer ? 'block' : 'none';
+
+            if (isBankTransfer) {
+                // Khóa số tiền theo tổng hóa đơn
+                amountTendered.value = invoiceAmount;
+
+                amountTendered.readOnly = true;
+            } else {
+                // Tiền mặt được phép nhập tiền thực nhận
+                amountTendered.readOnly = false;
+            }
+
+            if (transferChecked) {
+                transferChecked.checked = false;
+            }
+        }
+
+        // Cập nhật khi đổi phương thức
+        method.addEventListener(
+            'change',
+            updatePaymentUi
+        );
+
+        // Khởi tạo giao diện
+        updatePaymentUi();
+
+        // Kiểm tra trước khi gửi form
+        form.addEventListener('submit', (event) => {
+            const isBankTransfer =
+                method.value === 'Chuyển khoản';
+
+            if (isBankTransfer) {
+                // Đảm bảo gửi đúng tổng tiền hóa đơn
+                amountTendered.value = invoiceAmount;
+
+                if (!isQrConfigured) {
+                    alert(
+                        'Chưa cấu hình tài khoản ngân hàng.'
+                    );
+
+                    event.preventDefault();
+                    return;
+                }
+
+                if (!transferChecked?.checked) {
+                    alert(
+                        'Vui lòng kiểm tra tiền đã vào tài khoản trước khi xác nhận.'
+                    );
+
+                    event.preventDefault();
+                    return;
+                }
+
+                if (!confirm(
+                    'Bạn chắc chắn đã nhận đủ tiền chuyển khoản?'
+                )) {
+                    event.preventDefault();
+                }
+            } else {
+                if (!confirm(
+                    'Bạn chắc chắn đã thu đủ tiền mặt?'
+                )) {
+                    event.preventDefault();
+                }
+            }
+        });
+    })();
+</script>

@@ -1,0 +1,11 @@
+@model Medicine
+@{ViewData["Title"]="Thêm danh mục thuốc";}
+<div class="page-title"><h1>Thêm danh mục thuốc</h1><a asp-action="Index">← Kho thuốc</a></div>
+<div class="panel narrow"><form method="post" asp-action="Create" class="form-stack"><div asp-validation-summary="All" class="validation"></div>
+<label asp-for="Name">Tên thuốc</label><input asp-for="Name"/>
+<label asp-for="Unit">Đơn vị</label><input asp-for="Unit"/>
+<label asp-for="UnitPrice">Đơn giá (VND)</label><input asp-for="UnitPrice" type="number" min="0" step="1000"/>
+<label asp-for="ReorderLevel">Ngưỡng báo sắp hết</label><input asp-for="ReorderLevel" type="number" min="0"/>
+<label asp-for="ExpiresOn">Hạn sử dụng</label><input asp-for="ExpiresOn" type="date"/>
+<input asp-for="QuantityOnHand" type="hidden" value="0"/>
+<button class="btn">Lưu danh mục</button></form></div>

@@ -1,0 +1,87 @@
+@model ReportsVm
+
+@{
+    ViewData["Title"] = "Báo cáo doanh thu";
+    var largest = Math.Max(1m, Model.Months.Max(month => month.Total));
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN TRỊ</span>
+        <h1>Thống kê &amp; báo cáo</h1>
+        <p>Doanh thu chỉ tính từ hóa đơn đã thanh toán, không tính tiền đặt lịch.</p>
+    </div>
+    <a class="btn btn-outline" asp-action="ExportCsv" asp-route-year="@Model.Year">
+        ↓ Xuất CSV
+    </a>
+</div>
+
+<div class="panel">
+    <form method="get" class="filter-row">
+        <label for="year">Năm báo cáo</label>
+        <input type="number" name="year" id="year"
+               min="2020" max="2100" value="@Model.Year" />
+        <button type="submit" class="btn btn-small">Xem số liệu</button>
+    </form>
+</div>
+
+<div class="stats stats-4">
+    <div class="stat">
+        <span>Lịch hẹn</span>
+        <strong>@Model.Appointments</strong>
+    </div>
+    <div class="stat">
+        <span>Hoàn thành</span>
+        <strong>@Model.Completed</strong>
+    </div>
+    <div class="stat">
+        <span>Đã hủy</span>
+        <strong>@Model.Canceled</strong>
+    </div>
+    <div class="stat">
+        <span>Doanh thu thực nhận</span>
+        <strong>@Model.Revenue.ToString("N0") ₫</strong>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Doanh thu từng tháng năm @Model.Year (VND)</h2>
+    <div class="bar-chart" aria-label="Biểu đồ doanh thu theo tháng">
+        @foreach (var month in Model.Months)
+        {
+            var height = Math.Round(month.Total / largest * 100m, 0);
+            var heightText = height.ToString(System.Globalization.CultureInfo.InvariantCulture) + "%";
+            var barTitle = $"Tháng {month.Month}: {month.Total:N0} đồng";
+
+            <div class="bar-column">
+                <div class="bar-value">@month.Total.ToString("N0")</div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="height: @heightText" title="@barTitle"></div>
+                </div>
+                <span>T@month.Month</span>
+            </div>
+        }
+    </div>
+    <p class="muted">Nếu không có doanh thu, cột hiển thị ở mức 0.</p>
+</div>
+
+<div class="panel">
+    <h2>Số liệu chi tiết</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Tháng</th><th>Hóa đơn đã thanh toán</th><th>Doanh thu</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var month in Model.Months)
+                {
+                    <tr>
+                        <td>Tháng @month.Month</td>
+                        <td>@month.InvoiceCount</td>
+                        <td>@month.Total.ToString("N0") ₫</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

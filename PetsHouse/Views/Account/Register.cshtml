@@ -1,0 +1,11 @@
+@model RegisterVm
+@{ViewData["Title"]="Đăng ký";}
+<div class="auth-page"><div class="auth-image"><span class="eyebrow">THÀNH VIÊN PETSHOUSE</span><h2>Hành trình chăm sóc bắt đầu tại đây.</h2><p>Tạo tài khoản để quản lý hồ sơ và đặt lịch khám cho thú cưng.</p><div class="auth-illustration">🐱</div></div>
+<div class="auth-card"><span class="eyebrow">BẮT ĐẦU</span><h1>Tạo tài khoản</h1><p>Tài khoản đăng ký sẽ có vai trò khách hàng.</p>
+<form method="post" asp-action="Register" class="form-stack"><div asp-validation-summary="ModelOnly" class="validation"></div>
+<label asp-for="FullName">Họ tên</label><input asp-for="FullName"/><span asp-validation-for="FullName" class="validation"></span>
+<label asp-for="Phone">Số điện thoại</label><input asp-for="Phone"/><span asp-validation-for="Phone" class="validation"></span>
+<label asp-for="Email">Email</label><input asp-for="Email" autocomplete="username"/><span asp-validation-for="Email" class="validation"></span>
+<label asp-for="Password">Mật khẩu (tối thiểu 8 ký tự, chữ hoa, số và ký tự đặc biệt)</label><input asp-for="Password"/><span asp-validation-for="Password" class="validation"></span>
+<label asp-for="ConfirmPassword">Xác nhận mật khẩu</label><input asp-for="ConfirmPassword"/><span asp-validation-for="ConfirmPassword" class="validation"></span>
+<button class="btn btn-block" type="submit">Tạo tài khoản →</button></form><p class="auth-foot">Đã có tài khoản? <a asp-action="Login">Đăng nhập</a></p></div></div>

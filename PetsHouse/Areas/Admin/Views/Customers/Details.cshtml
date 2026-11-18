@@ -1,0 +1,61 @@
+@model Customer
+
+@{
+    ViewData["Title"] = "Chi tiết khách hàng";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">KHÁCH HÀNG #@Model.Id</span>
+        <h1>@Model.Name</h1>
+        <p>@Model.Phone · @Model.User.Email</p>
+    </div>
+    <a asp-action="Index">← Danh sách</a>
+</div>
+
+<div class="panel">
+    <h2>Hồ sơ thú cưng (@Model.Pets.Count)</h2>
+    <div class="cards">
+        @foreach (var pet in Model.Pets)
+        {
+            <div class="pet-card">
+                <strong>🐾 @pet.Name</strong>
+                <p>@pet.Species · @pet.Breed</p>
+                <p class="muted">@pet.Notes</p>
+            </div>
+        }
+        @if (!Model.Pets.Any())
+        {
+            <p class="muted">Khách hàng chưa khai báo thú cưng.</p>
+        }
+    </div>
+</div>
+
+<div class="panel">
+    <h2>30 lịch hẹn gần nhất</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Appointment appointment in ViewBag.Appointments)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@appointment.Status.ToVietnamese()</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

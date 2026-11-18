@@ -1,0 +1,80 @@
+@model List<Customer>
+
+@{
+    ViewData["Title"] = "PetsHouse";
+    var stt = 0;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">NHÂN VIÊN / TIẾP NHẬN</span>
+        <h1>Tiếp nhận khách hàng</h1>
+        <p>Tra cứu khách hàng trước khi tạo tài khoản; bổ sung thú cưng và đặt lịch khám tại quầy.</p>
+    </div>
+    <a class="btn" asp-area="Staff" asp-controller="Reception" asp-action="Create">
+        + Tạo khách hàng mới
+    </a>
+</div>
+
+<div class="panel">
+    <form method="get" asp-action="Index" class="form-inline">
+        <label for="searchCustomer">Tìm tên, số điện thoại, email</label>
+        <input id="searchCustomer" name="q" value="@ViewBag.Query"
+               placeholder="Ví dụ: 090... hoặc Nguyễn Văn A" maxlength="80" />
+        <button class="btn" type="submit">Tìm kiếm</button>
+        <a class="btn btn-outline" asp-action="Index">Xóa lọc</a>
+    </form>
+</div>
+
+<div class="panel">
+    <h2>Danh sách khách hàng (@Model.Count bản ghi đang hiển thị)</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Mã KH</th>
+                    <th>Họ tên</th>
+                    <th>Số điện thoại</th>
+                    <th>Email</th>
+                    <th>Thú cưng</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var customer in Model)
+                {
+                    stt++;
+                    <tr>
+                        <td>@stt</td>
+                        <td>#@customer.Id</td>
+                        <td><strong>@customer.Name</strong></td>
+                        <td>@customer.Phone</td>
+                        <td>@customer.User.Email</td>
+                        <td>
+                            @foreach (var pet in customer.Pets.OrderBy(x => x.Id))
+                            {
+                                <div>@pet.Name (@pet.Species)</div>
+                            }
+                            @if (!customer.Pets.Any())
+                            {
+                                <span class="muted">Chưa có</span>
+                            }
+                        </td>
+                        <td>
+                            <a class="btn btn-small btn-outline" asp-action="AddPet"
+                               asp-route-customerId="@customer.Id">+ Thú cưng</a>
+                            <a class="btn btn-small" asp-area="Staff"
+                               asp-controller="Appointments" asp-action="Create"
+                               asp-route-customerId="@customer.Id">Đặt lịch</a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="7">Không tìm thấy khách hàng.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

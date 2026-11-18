@@ -1,0 +1,91 @@
+@model StaffAppointmentCreateVm
+
+@{
+    ViewData["Title"] = "Đặt lịch tại quầy";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">NHÂN VIÊN / LỊCH HẸN</span>
+        <h1>Đặt lịch khám tại quầy</h1>
+        <p>Tra cứu hoặc tạo khách hàng trước khi đặt lịch. Không thu tiền cọc.</p>
+    </div>
+    <a class="btn btn-outline" asp-action="Index">← Danh sách</a>
+</div>
+
+<div class="panel narrow">
+    <form method="post" asp-action="Create" class="form-stack">
+        <div asp-validation-summary="All" class="validation"></div>
+
+        <label asp-for="CustomerId">Khách hàng *</label>
+        <select asp-for="CustomerId" id="customerSelect">
+            <option value="0">-- Chọn khách hàng --</option>
+            @foreach (Customer customer in ViewBag.Customers)
+            {
+                <option value="@customer.Id">#@customer.Id – @customer.Name (@customer.Phone)</option>
+            }
+        </select>
+        <a asp-area="Staff" asp-controller="Reception" asp-action="Create">Chưa có hồ sơ? Tạo khách hàng mới</a>
+
+        <label asp-for="PetId">Thú cưng *</label>
+        <select asp-for="PetId" id="petSelect">
+            <option value="0">-- Chọn thú cưng --</option>
+            @foreach (Pet pet in ViewBag.Pets)
+            {
+                <option value="@pet.Id" data-customer="@pet.CustomerId">
+                    #@pet.Id – @pet.Name (@pet.Species)
+                </option>
+            }
+        </select>
+        <span asp-validation-for="PetId" class="validation"></span>
+
+        <label asp-for="ServiceId">Loại khám *</label>
+        <select asp-for="ServiceId">
+            <option value="0">-- Chọn loại khám --</option>
+            @foreach (ClinicService service in ViewBag.Services)
+            {
+                <option value="@service.Id">
+                    @service.Name – @service.Price.ToString("N0") ₫
+                </option>
+            }
+        </select>
+
+        <label asp-for="VeterinarianId">Bác sĩ (tùy chọn)</label>
+        <select asp-for="VeterinarianId">
+            <option value="">Nhân viên phân công sau</option>
+            @foreach (Veterinarian doctor in ViewBag.Doctors)
+            {
+                <option value="@doctor.Id">@doctor.FullName – @doctor.Specialty</option>
+            }
+        </select>
+
+        <label asp-for="StartsAt">Ngày và giờ khám *</label>
+        <input asp-for="StartsAt" type="datetime-local" />
+
+        <label asp-for="Notes">Ghi chú tình trạng thú cưng</label>
+        <textarea asp-for="Notes" rows="4" maxlength="600"></textarea>
+
+        <button type="submit" class="btn">Lưu lịch hẹn</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const customer = document.getElementById('customerSelect');
+            const pet = document.getElementById('petSelect');
+            const options = Array.from(pet.options).slice(1);
+            const refresh = () => {
+                const id = customer.value;
+                for (const option of options) {
+                    option.hidden = !id || option.dataset.customer !== id;
+                }
+                if (pet.selectedOptions.length && pet.selectedOptions[0].hidden) {
+                    pet.value = '0';
+                }
+            };
+            customer.addEventListener('change', refresh);
+            refresh();
+        })();
+    </script>
+}

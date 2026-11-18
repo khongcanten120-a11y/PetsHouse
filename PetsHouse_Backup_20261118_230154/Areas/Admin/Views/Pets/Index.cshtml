@@ -1,0 +1,75 @@
+@model List<Pet>
+
+@{
+    ViewData["Title"] = "Hồ sơ thú cưng";
+    var query = ViewBag.Query as string ?? "";
+    var total = (int)ViewBag.Total;
+    var currentPage = (int)ViewBag.CurrentPage;
+    var pageSize = (int)ViewBag.PageSize;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN TRỊ</span>
+        <h1>Hồ sơ thú cưng</h1>
+        <p>Tra cứu thú cưng và chủ nuôi đang có trong hệ thống.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <form method="get" class="filter-row">
+        <label for="searchPet">Tìm theo tên, loài hoặc chủ nuôi</label>
+        <input id="searchPet" name="q" type="search" value="@query" />
+        <button class="btn btn-small" type="submit">Tìm kiếm</button>
+        <a class="btn btn-outline btn-small" asp-action="Index">Xóa lọc</a>
+    </form>
+</div>
+
+<div class="panel">
+    <div class="section-bar"><h2>Danh sách thú cưng (@total)</h2></div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Tên thú cưng</th>
+                    <th>Loài</th>
+                    <th>Giống</th>
+                    <th>Chủ nuôi</th>
+                    <th>Hồ sơ chủ nuôi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pet in Model)
+                {
+                    <tr>
+                        <td>#@pet.Id</td>
+                        <td><strong>🐾 @pet.Name</strong></td>
+                        <td>@pet.Species</td>
+                        <td>@(pet.Breed ?? "Chưa cập nhật")</td>
+                        <td>@pet.Customer.Name</td>
+                        <td>
+                            <a asp-area="Admin" asp-controller="Customers" asp-action="Details"
+                               asp-route-id="@pet.CustomerId">Xem chi tiết →</a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="6">Chưa có thú cưng phù hợp.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <nav class="pager" aria-label="Phân trang thú cưng">
+        @if (currentPage > 1)
+        {
+            <a asp-action="Index" asp-route-q="@query" asp-route-page="@(currentPage - 1)">← Trước</a>
+        }
+        <span>Trang @currentPage / @Math.Max(1, (int)Math.Ceiling((double)total / pageSize))</span>
+        @if (currentPage * pageSize < total)
+        {
+            <a asp-action="Index" asp-route-q="@query" asp-route-page="@(currentPage + 1)">Sau →</a>
+        }
+    </nav>
+</div>

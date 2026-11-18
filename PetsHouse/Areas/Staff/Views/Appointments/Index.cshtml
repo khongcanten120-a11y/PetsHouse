@@ -1,0 +1,109 @@
+@model List<Appointment>
+
+@{
+    ViewData["Title"] = "Quản lý lịch hẹn tại quầy";
+    var page = (int)ViewBag.CurrentPage;
+    var pageSize = (int)ViewBag.PageSize;
+    var total = (int)ViewBag.Total;
+    var stt = (page - 1) * pageSize;
+    AppointmentStatus? selectedStatus = ViewBag.Status as AppointmentStatus?;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">NHÂN VIÊN / LỊCH HẸN</span>
+        <h1>Đặt &amp; quản lý lịch khám</h1>
+        <p>Đặt lịch tại quầy, đổi giờ hoặc hủy lịch chưa bắt đầu.</p>
+    </div>
+    <a class="btn" asp-action="Create">+ Đặt lịch tại quầy</a>
+</div>
+
+<div class="panel">
+    <form asp-action="Index" method="get" class="form-inline">
+        <label for="query">Tìm khách hàng/thú cưng</label>
+        <input id="query" name="q" value="@ViewBag.Query" maxlength="80" />
+        <label for="filterStatus">Trạng thái</label>
+        <select id="filterStatus" name="status">
+            <option value="">Tất cả</option>
+            @foreach (var status in Enum.GetValues<AppointmentStatus>())
+            {
+                <option value="@status" selected="@(selectedStatus == status)">
+                    @status.ToVietnamese()
+                </option>
+            }
+        </select>
+        <button class="btn" type="submit">Tìm kiếm</button>
+        <a class="btn btn-outline" asp-action="Index">Xóa lọc</a>
+    </form>
+</div>
+
+<div class="panel">
+    <h2>Danh sách lịch hẹn (@total)</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Mã lịch</th>
+                    <th>Khách hàng</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Thời gian</th>
+                    <th>Bác sĩ</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model)
+                {
+                    stt++;
+                    <tr>
+                        <td>@stt</td>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Customer.Name</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(appointment.Veterinarian?.FullName ?? "Chưa phân công")</td>
+                        <td><span class="pill">@appointment.Status.ToVietnamese()</span></td>
+                        <td>
+                            @if ((appointment.Status == AppointmentStatus.Pending ||
+                                  appointment.Status == AppointmentStatus.Confirmed ||
+                                  appointment.Status == AppointmentStatus.Waiting) &&
+                                 appointment.StartsAt > DateTime.Now)
+                            {
+                                <a class="btn btn-small btn-outline" asp-action="Edit"
+                                   asp-route-id="@appointment.Id">Đổi lịch</a>
+                                <form method="post" asp-action="Cancel"
+                                      asp-route-id="@appointment.Id"
+                                      onsubmit="return confirm('Xác nhận hủy lịch hẹn này?');">
+                                    <input type="text" name="reason" maxlength="160"
+                                           placeholder="Lý do hủy" aria-label="Lý do hủy lịch" />
+                                    <button type="submit" class="btn btn-small btn-danger">Hủy lịch</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="9">Chưa có lịch hẹn phù hợp.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-actions">
+        @if (page > 1)
+        {
+            <a class="btn btn-outline" asp-action="Index" asp-route-page="@(page - 1)"
+               asp-route-q="@ViewBag.Query" asp-route-status="@selectedStatus">← Trang trước</a>
+        }
+        <span>Trang @(page) / @Math.Max(1, (int)Math.Ceiling((double)total / pageSize))</span>
+        @if (page * pageSize < total)
+        {
+            <a class="btn btn-outline" asp-action="Index" asp-route-page="@(page + 1)"
+               asp-route-q="@ViewBag.Query" asp-route-status="@selectedStatus">Trang sau →</a>
+        }
+    </div>
+</div>

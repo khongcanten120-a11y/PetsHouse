@@ -1,0 +1,68 @@
+@model List<Appointment>
+
+@{
+    ViewData["Title"] = "Lịch hẹn của tôi";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">LỊCH KHÁM</span>
+        <h1>Lịch hẹn của tôi</h1>
+    </div>
+
+    <a class="btn" asp-action="Create">+ Đặt lịch mới</a>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Bác sĩ</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@(appointment.Veterinarian?.FullName ?? "Chưa phân công")</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <span class="pill">@appointment.Status.ToVietnamese()</span>
+                        </td>
+                        <td>
+                            @if (appointment.Status != AppointmentStatus.Canceled &&
+                                 appointment.Status != AppointmentStatus.Completed &&
+                                 appointment.StartsAt > DateTime.Now.AddDays(1))
+                            {
+                                <form method="post" asp-action="Cancel"
+                                      asp-route-id="@appointment.Id">
+                                    <button class="btn btn-small btn-outline" type="submit"
+                                            onclick="return confirm('Xác nhận hủy lịch?')">
+                                        Hủy lịch
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7">Chưa có lịch hẹn nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

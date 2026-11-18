@@ -1,0 +1,37 @@
+@model StaffAppointmentEditVm
+
+@{
+    ViewData["Title"] = "Điều chỉnh lịch khám";
+    var appointment = (Appointment)ViewBag.Appointment;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">NHÂN VIÊN / LỊCH HẸN</span>
+        <h1>Điều chỉnh lịch #@appointment.Id</h1>
+        <p>@appointment.Customer.Name · @appointment.Pet.Name · @appointment.ClinicService.Name</p>
+    </div>
+    <a class="btn btn-outline" asp-action="Index">← Danh sách</a>
+</div>
+
+<div class="panel narrow">
+    <form asp-action="Edit" method="post" class="form-stack">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="All" class="validation"></div>
+
+        <label asp-for="StartsAt">Ngày giờ khám mới</label>
+        <input asp-for="StartsAt" type="datetime-local" />
+
+        <label asp-for="VeterinarianId">Bác sĩ phụ trách</label>
+        <select asp-for="VeterinarianId">
+            <option value="">Chưa phân công</option>
+            @foreach (Veterinarian doctor in ViewBag.Doctors)
+            {
+                <option value="@doctor.Id">@doctor.FullName</option>
+            }
+        </select>
+        <p class="muted">Hệ thống kiểm tra bác sĩ có ca làm bao phủ lịch mới và không bị trùng giờ.</p>
+
+        <button class="btn" type="submit">Lưu thay đổi</button>
+    </form>
+</div>

@@ -1,0 +1,88 @@
+@model CustomerDashboardVm
+
+@{
+    ViewData["Title"] = "Tài khoản của tôi";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">KHÁCH HÀNG</span>
+        <h1>Xin chào, @Model.CustomerName!</h1>
+        <p>Quản lý thú cưng và lịch khám ở một nơi.</p>
+    </div>
+
+    <a class="btn" asp-controller="Appointments" asp-action="Create">
+        + Đặt lịch khám
+    </a>
+</div>
+
+<div class="stats stats-3">
+    <div class="stat">
+        <span>Thú cưng của tôi</span>
+        <strong>@Model.PetCount</strong>
+        <a asp-controller="Pets" asp-action="Index">Xem hồ sơ →</a>
+    </div>
+
+    <div class="stat">
+        <span>Tổng lịch hẹn</span>
+        <strong>@Model.AppointmentCount</strong>
+        <a asp-controller="Appointments" asp-action="Index">Xem lịch hẹn →</a>
+    </div>
+
+    <div class="stat">
+        <span>Lịch sắp tới</span>
+        <strong>@Model.UpcomingCount</strong>
+        <a asp-controller="Appointments" asp-action="Index">Chi tiết →</a>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="section-bar">
+        <h2>Lịch hẹn gần đây</h2>
+        <a asp-controller="MedicalHistory" asp-action="Index">Lịch sử khám →</a>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã lịch</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Ngày giờ</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model.RecentAppointments)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <span class="pill">@appointment.Status.ToVietnamese()</span>
+                        </td>
+                    </tr>
+                }
+
+                @if (!Model.RecentAppointments.Any())
+                {
+                    <tr>
+                        <td colspan="5">Bạn chưa có lịch hẹn nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="action-grid">
+    <a class="action-tile" asp-controller="Pets" asp-action="Create">
+        🐾 Thêm thú cưng mới →
+    </a>
+    <a class="action-tile" asp-controller="Customer" asp-action="Profile">
+        👤 Cập nhật hồ sơ cá nhân →
+    </a>
+</div>

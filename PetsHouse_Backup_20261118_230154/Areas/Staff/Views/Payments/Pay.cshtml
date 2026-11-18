@@ -1,0 +1,8 @@
+@model PaymentVm
+@{ViewData["Title"]="Thanh toán";var appt=(Appointment)ViewBag.Appointment;decimal total=(decimal)ViewBag.Total;}
+<div class="page-title"><h1>Thanh toán ca khám #@appt.Id</h1><a asp-action="Index">← Danh sách</a></div>
+<div class="panel narrow"><div class="invoice-total"><span>Thú cưng: <strong>@appt.Pet.Name</strong></span><strong>@total.ToString("N0") ₫</strong><p>Phí dịch vụ + các thuốc đã kê.</p></div>
+<form method="post" asp-action="Pay" class="form-stack"><input asp-for="AppointmentId" type="hidden"/><div asp-validation-summary="All" class="validation"></div>
+<label asp-for="Method">Phương thức thanh toán</label><select asp-for="Method"><option>Tiền mặt</option><option>Chuyển khoản</option></select>
+<label asp-for="AmountTendered">Số tiền thực nhận (VND)</label><input asp-for="AmountTendered" type="number" min="0" step="1000"/>
+<button class="btn" type="submit" onclick="return confirm('Xác nhận đã thu đủ tiền?');">Xác nhận thanh toán</button></form></div>

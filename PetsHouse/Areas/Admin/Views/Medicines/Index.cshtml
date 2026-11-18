@@ -1,0 +1,62 @@
+@model List<Medicine>
+
+@{
+    ViewData["Title"] = "Danh mục thuốc";
+    var query = ViewBag.Query as string ?? "";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN TRỊ</span>
+        <h1>Danh mục thuốc</h1>
+        <p>Xem số lượng còn trong kho. Nhập xuất do quản lý kho thực hiện.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <form method="get" class="filter-row">
+        <label for="searchMedicine">Tìm thuốc</label>
+        <input id="searchMedicine" type="search" name="q" value="@query" />
+        <button class="btn btn-small" type="submit">Tìm kiếm</button>
+    </form>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Tên thuốc</th>
+                    <th>Đơn vị</th>
+                    <th>Đơn giá</th>
+                    <th>Tồn kho</th>
+                    <th>Ngưỡng cảnh báo</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var medicine in Model)
+                {
+                    <tr>
+                        <td>#@medicine.Id</td>
+                        <td>@medicine.Name</td>
+                        <td>@medicine.Unit</td>
+                        <td>@medicine.UnitPrice.ToString("N0") ₫</td>
+                        <td>@medicine.QuantityOnHand</td>
+                        <td>@medicine.ReorderLevel</td>
+                        <td>
+                            <span class="pill @(medicine.QuantityOnHand <= medicine.ReorderLevel ? "warning" : "")">
+                                @(medicine.QuantityOnHand <= medicine.ReorderLevel ? "Sắp hết" : "Còn hàng")
+                            </span>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="7">Chưa có thuốc nào phù hợp.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

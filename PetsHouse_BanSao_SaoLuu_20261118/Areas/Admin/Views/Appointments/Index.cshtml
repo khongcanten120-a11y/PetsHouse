@@ -1,0 +1,107 @@
+@model List<Appointment>
+
+@{
+    ViewData["Title"] = "Theo dõi lịch hẹn";
+    var currentPage = (int)ViewBag.CurrentPage;
+    var total = (int)ViewBag.Total;
+    var perPage = (int)ViewBag.PageSize;
+    var selectedStatus = (AppointmentStatus?)ViewBag.Status;
+    var selectedDate = (DateTime?)ViewBag.Day;
+    var dayText = selectedDate?.ToString("yyyy-MM-dd");
+    var queryText = ViewBag.Query as string ?? "";
+    var pages = Math.Max(1, (int)Math.Ceiling((double)total / perPage));
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN TRỊ / LỊCH KHÁM</span>
+        <h1>Lịch hẹn toàn hệ thống</h1>
+        <p>Xem và tra cứu. Nhân viên sẽ phụ trách xác nhận và phân công bác sĩ.</p>
+    </div>
+</div>
+
+<section class="panel">
+    <form method="get" class="filter-row">
+        <label for="searchAppointments">Tìm kiếm</label>
+        <input id="searchAppointments" type="search" name="q" value="@queryText"
+               placeholder="Khách hàng hoặc thú cưng" />
+
+        <label for="status">Trạng thái</label>
+        <select id="status" name="status">
+            <option value="">Tất cả</option>
+            @foreach (var state in Enum.GetValues<AppointmentStatus>())
+            {
+                <option value="@state" selected="@(selectedStatus == state)">
+                    @state.ToVietnamese()
+                </option>
+            }
+        </select>
+
+        <label for="day">Ngày</label>
+        <input type="date" id="day" name="day" value="@dayText" />
+
+        <button type="submit" class="btn btn-small">Lọc</button>
+        <a class="btn btn-outline btn-small" asp-action="Index">Xóa lọc</a>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="section-bar">
+        <h2>Danh sách lịch hẹn (@total)</h2>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã lịch</th>
+                    <th>Khách hàng</th>
+                    <th>Thú cưng</th>
+                    <th>Loại khám</th>
+                    <th>Bác sĩ</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appointment in Model)
+                {
+                    <tr>
+                        <td>#@appointment.Id</td>
+                        <td>@appointment.Customer.Name</td>
+                        <td>@appointment.Pet.Name</td>
+                        <td>@appointment.ClinicService.Name</td>
+                        <td>@(appointment.Veterinarian?.FullName ?? "Chưa phân công")</td>
+                        <td>@appointment.StartsAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="pill">@appointment.Status.ToVietnamese()</span></td>
+                    </tr>
+                }
+
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="table-empty">
+                            Không có lịch hẹn nào phù hợp với bộ lọc.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pager" aria-label="Phân trang lịch hẹn">
+        @if (currentPage > 1)
+        {
+            <a asp-action="Index" asp-route-status="@selectedStatus"
+               asp-route-day="@dayText" asp-route-q="@queryText"
+               asp-route-page="@(currentPage - 1)">← Trước</a>
+        }
+        <span>Trang @currentPage / @pages</span>
+        @if (currentPage < pages)
+        {
+            <a asp-action="Index" asp-route-status="@selectedStatus"
+               asp-route-day="@dayText" asp-route-q="@queryText"
+               asp-route-page="@(currentPage + 1)">Sau →</a>
+        }
+    </nav>
+</section>

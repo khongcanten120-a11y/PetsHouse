@@ -1,0 +1,101 @@
+/* Lịch làm việc Pets House - chỉ áp dụng cho các lớp sc-* */
+.sc-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 22px 0;
+}
+
+.sc-stat {
+    background: var(--surface, #fff);
+    border: 1px solid #dfe8f7;
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: #4c6287;
+}
+
+.sc-stat strong { color: #102f65; font-size: 23px; }
+.sc-stat-warning strong { color: #d85a38; }
+
+.sc-calendar-panel {
+    background: var(--surface, #fff);
+    border: 1px solid #dfe8f7;
+    border-radius: 20px;
+    padding: 20px;
+    margin-top: 18px;
+    box-shadow: 0 10px 30px rgba(23, 58, 113, .04);
+}
+
+.sc-calendar-panel h2 { margin: 0; }
+.sc-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.sc-toolbar h2 { font-size: 24px; margin: 0 2px; }
+.sc-nav, .sc-today {
+    padding: 9px 13px;
+    color: #123e82;
+    background: #eef4ff;
+    border: 1px solid #d8e5fb;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.sc-legend { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #597097; }
+.sc-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.sc-dot-ok { background: #13966b; }
+.sc-dot-missing { background: #d95853; }
+.sc-overflow { overflow-x: auto; }
+.sc-weekdays, .sc-grid { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 8px; }
+.sc-weekdays { margin-bottom: 9px; color: #6c7ea0; font-weight: 700; text-align: center; }
+.sc-weekdays > div { padding: 8px; }
+.sc-day {
+    background: #fff;
+    border: 1px solid #e0e8f7;
+    border-radius: 13px;
+    padding: 10px 8px;
+    min-height: 190px;
+    min-width: 0;
+}
+.sc-outside { background: #f5f7fc; opacity: .55; }
+.sc-today-day { border: 2px solid #397aff; box-shadow: inset 0 0 0 1px #b6cfff; }
+.sc-date { font-size: 17px; font-weight: 800; color: #14356b; margin-bottom: 9px; }
+.sc-slot { border-left: 3px solid; border-radius: 8px; padding: 8px 6px; margin-bottom: 8px; font-size: 11px; }
+.sc-covered { border-color: #14956c; background: #ebf9f3; }
+.sc-missing { border-color: #e05c55; background: #fff2f1; }
+.sc-slot-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px; margin-bottom: 4px; color: #14376e; }
+.sc-slot-head small { font-size: 10px; }
+.sc-doctor { color: #0e7a5d; font-weight: 700; padding-top: 2px; }
+.sc-alert { color: #c44742; font-weight: 700; margin: 5px 0; }
+.sc-details { margin-top: 7px; }
+.sc-details summary { color: #176fd1; cursor: pointer; font-weight: 700; padding: 3px 0; }
+.sc-forms { display: grid; gap: 10px; margin-top: 8px; }
+.sc-inline-form { display: grid; gap: 6px; }
+.sc-inline-form select, .sc-inline-form input {
+    width: 100%; min-width: 0; padding: 7px; border-radius: 7px;
+    border: 1px solid #cddaf2; background: #fff; color: #1a3568; font: inherit;
+}
+.sc-button {
+    background: #1779dd; color: white; border: 0; border-radius: 7px;
+    padding: 7px; font-weight: 700; font-size: 11px; cursor: pointer;
+    margin-top: 4px; width: 100%;
+}
+.sc-button-danger { background: #cb5353; }
+.sc-legacy { margin-top: 20px; }
+.sc-legacy p { color: #647b9e; }
+@media (max-width: 1100px) {
+    .sc-weekdays, .sc-grid { min-width: 1100px; }
+}
+@media (max-width: 680px) {
+    .sc-summary { grid-template-columns: 1fr; }
+    .sc-calendar-panel { padding: 12px; }
+    .sc-toolbar h2 { font-size: 20px; }
+}

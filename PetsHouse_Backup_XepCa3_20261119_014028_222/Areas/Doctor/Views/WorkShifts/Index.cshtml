@@ -1,0 +1,149 @@
+@model PetsHouse.Models.ShiftCalendarVm
+
+@{
+    ViewData["Title"] = "Lịch làm việc của tôi";
+    var first = new DateTime(Model.Year, Model.Month, 1);
+    var previous = first.AddMonths(-1);
+    var next = first.AddMonths(1);
+    var now = DateTime.Now;
+    string[] weekdays = { "T2", "T3", "T4", "T5", "T6", "T7", "CN" };
+}
+
+<link rel="stylesheet" href="~/css/pets-shift-calendar.css" asp-append-version="true" />
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">BÁC SĨ / LỊCH LÀM VIỆC</span>
+        <h1>Lịch làm việc của tôi</h1>
+        <p>Đăng ký Ca 1 (08:00–16:00) hoặc Ca 2 (16:00–20:00), không cần nhập giờ thủ công.</p>
+    </div>
+</div>
+
+@if (!Model.HasDoctorProfile)
+{
+    <div class="sc-calendar-panel">
+        <h2>Chưa có hồ sơ bác sĩ đang hoạt động</h2>
+        <p>Hãy liên hệ quản trị viên để liên kết tài khoản đăng nhập với hồ sơ bác sĩ.</p>
+    </div>
+}
+else
+{
+    <div class="sc-calendar-panel">
+        <p>Bác sĩ: <strong>@Model.CurrentDoctorName</strong></p>
+        <div class="sc-toolbar">
+            <a class="sc-nav" asp-area="Doctor" asp-controller="WorkShifts" asp-action="Index"
+               asp-route-year="@previous.Year" asp-route-month="@previous.Month"
+               aria-label="Tháng trước">&#x2039;</a>
+            <h2>Tháng @Model.Month/@Model.Year</h2>
+            <a class="sc-nav" asp-area="Doctor" asp-controller="WorkShifts" asp-action="Index"
+               asp-route-year="@next.Year" asp-route-month="@next.Month"
+               aria-label="Tháng sau">&#x203A;</a>
+            <a class="sc-today" asp-area="Doctor" asp-controller="WorkShifts" asp-action="Index">Hôm nay</a>
+            <span class="sc-legend"><span class="sc-dot sc-dot-ok"></span>Đã đăng ký</span>
+            <span class="sc-legend"><span class="sc-dot sc-dot-missing"></span>Chưa đăng ký</span>
+        </div>
+
+        <div class="sc-overflow">
+            <div class="sc-weekdays">
+                @foreach (var weekday in weekdays)
+                {
+                    <div>@weekday</div>
+                }
+            </div>
+
+            <div class="sc-grid">
+                @foreach (var day in Model.Days)
+                {
+                    var dayClass = day.IsCurrentMonth ? "" : "sc-outside";
+                    if (day.IsToday)
+                    {
+                        dayClass += " sc-today-day";
+                    }
+
+                    <div class="sc-day @dayClass">
+                        <div class="sc-date">@day.Date.Day</div>
+
+                        @if (day.IsCurrentMonth)
+                        {
+                            @foreach (var slot in day.Slots)
+                            {
+                                <div class="sc-slot @(slot.Missing ? "sc-missing" : "sc-covered")">
+                                    <div class="sc-slot-head">
+                                        <strong>@slot.Name</strong>
+                                        <small>@slot.TimeLabel</small>
+                                    </div>
+
+                                    @if (!slot.Missing)
+                                    {
+                                        <div class="sc-doctor">✓ Đã đăng ký</div>
+                                        @foreach (var entry in slot.Assignments)
+                                        {
+                                            @if (slot.StartAt > now && entry.IsStandard)
+                                            {
+                                                <form asp-area="Doctor" asp-controller="WorkShifts"
+                                                      asp-action="Cancel" method="post"
+                                                      onsubmit="return confirm('Hủy ca đã đăng ký?');">
+                                                    <input type="hidden" name="id" value="@entry.ShiftId" />
+                                                    <button type="submit" class="sc-button sc-button-danger">Hủy ca</button>
+                                                </form>
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="sc-alert">Chưa đăng ký</div>
+                                        @if (slot.StartAt > now)
+                                        {
+                                            <form asp-area="Doctor" asp-controller="WorkShifts"
+                                                  asp-action="Create" method="post">
+                                                <input type="hidden" name="WorkDate"
+                                                       value="@(day.Date.ToString("yyyy-MM-dd"))" />
+                                                <input type="hidden" name="ShiftCode" value="@slot.Code" />
+                                                <button type="submit" class="sc-button">+ Đăng ký ca</button>
+                                            </form>
+                                        }
+                                    }
+
+                                    @if (slot.HasDoctorConflict)
+                                    {
+                                        <div class="sc-alert">⚠ Có ca đăng ký trùng giờ</div>
+                                    }
+
+                                    @if (slot.HasNonstandardOverlap)
+                                    {
+                                        <div class="sc-alert">⚠ Có ca cũ chưa đúng giờ chuẩn</div>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (Model.LegacyShifts.Any())
+    {
+        <div class="sc-calendar-panel sc-legacy">
+            <h2>Ca cũ chưa đúng giờ chuẩn</h2>
+            <p>Nhờ nhân viên hỗ trợ điều chỉnh các ca trước đây không thuộc 08:00–16:00 hoặc 16:00–20:00.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Mã ca</th><th>Bắt đầu</th><th>Kết thúc</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var shift in Model.LegacyShifts)
+                        {
+                            <tr>
+                                <td>#@shift.ShiftId</td>
+                                <td>@shift.StartAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@shift.EndAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

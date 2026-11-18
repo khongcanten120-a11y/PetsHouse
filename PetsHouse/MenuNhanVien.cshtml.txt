@@ -1,0 +1,33 @@
+@if (isStaff)
+{
+    <a class="@(area == "Staff" && controller == "Reception" ? "active" : "")"
+       asp-area="Staff" asp-controller="Reception" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#users"></use></svg>
+        <span>Tiếp nhận khách hàng</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "Appointments" ? "active" : "")"
+       asp-area="Staff" asp-controller="Appointments" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+        <span>Đặt &amp; quản lý lịch khám</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "Dashboard" ? "active" : "")"
+       asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#stethoscope"></use></svg>
+        <span>Xác nhận &amp; phân công khám</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "WorkShifts" ? "active" : "")"
+       asp-area="Staff" asp-controller="WorkShifts" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#calendar"></use></svg>
+        <span>Xếp lịch / Thay thế / Hủy ca bác sĩ</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "Payments" ? "active" : "")"
+       asp-area="Staff" asp-controller="Payments" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#receipt"></use></svg>
+        <span>Thanh toán</span>
+    </a>
+    <a class="@(area == "Staff" && controller == "Invoices" ? "active" : "")"
+       asp-area="Staff" asp-controller="Invoices" asp-action="Index">
+        <svg class="icon"><use href="/images/icons.svg#receipt"></use></svg>
+        <span>Tra cứu &amp; in hóa đơn</span>
+    </a>
+}

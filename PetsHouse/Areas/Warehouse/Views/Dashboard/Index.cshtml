@@ -1,0 +1,359 @@
+@model List<Medicine>
+
+@{
+    ViewData["Title"] = "Kho thuốc và vật tư";
+
+    var activeMedicines = Model.Where(medicine => medicine.IsActive).ToList();
+    var outOfStock = activeMedicines
+        .Where(medicine => medicine.QuantityOnHand == 0)
+        .ToList();
+    var lowStock = activeMedicines
+        .Where(medicine => medicine.QuantityOnHand > 0 &&
+                           medicine.QuantityOnHand <= medicine.ReorderLevel)
+        .ToList();
+    var warnings = outOfStock.Concat(lowStock).OrderBy(medicine => medicine.Id).ToList();
+    var today = DateTime.Today;
+}
+
+<style>
+    .wh-overview {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .wh-stat {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px 18px;
+    }
+
+    .wh-stat span {
+        display: block;
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .wh-stat strong {
+        display: block;
+        font-size: 26px;
+        color: var(--text);
+    }
+
+    .wh-stat.critical strong { color: #d13f47; }
+    .wh-stat.low strong { color: #ba6d08; }
+
+    .wh-warning-box {
+        border: 1px solid #e4ad53;
+        border-left: 5px solid #e6a12f;
+        border-radius: 14px;
+        background: var(--panel);
+        padding: 16px 20px;
+        margin: 18px 0;
+    }
+
+    .wh-warning-box h2 {
+        font-size: 18px;
+        margin: 0 0 8px;
+        color: #d08012;
+    }
+
+    .wh-warning-box p { margin: 0 0 9px; color: var(--text); }
+
+    .wh-warning-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .wh-warning-list a {
+        padding: 6px 10px;
+        background: #fff1dd;
+        border-radius: 7px;
+        color: #8d4d06;
+        font-size: 13px;
+        font-weight: 650;
+    }
+
+    .wh-healthy-box {
+        margin: 18px 0;
+        border: 1px solid #9ed8b7;
+        border-radius: 12px;
+        padding: 12px 18px;
+        color: #168259;
+        background: var(--panel);
+        font-weight: 650;
+    }
+
+    .wh-stock-table { min-width: 1260px; }
+    .wh-stock-table tr.wh-row-empty { background: rgba(211, 63, 71, .07); }
+    .wh-stock-table tr.wh-row-low { background: rgba(240, 166, 46, .08); }
+
+    .wh-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .wh-tag {
+        display: inline-flex;
+        border-radius: 7px;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .wh-tag.ok { color: #067757; background: #dff5ed; }
+    .wh-tag.low { color: #9d5900; background: #fff0d4; }
+    .wh-tag.empty { color: #b32c35; background: #ffe4e5; }
+    .wh-tag.expired { color: #b32c35; background: #ffe4e5; }
+
+    .wh-form {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .wh-form input[type="number"] {
+        width: 66px;
+        min-width: 66px;
+        min-height: 36px;
+        padding: 6px;
+    }
+
+    .wh-form select {
+        min-width: 160px;
+        max-width: 170px;
+        min-height: 36px;
+        padding: 6px;
+    }
+
+    .wh-form button { white-space: nowrap; }
+    .wh-btn-export {
+        background: #e5f0ff;
+        border: 1px solid #9fc4ef;
+        color: #115ab1 !important;
+    }
+    .wh-btn-export:hover { background: #d5e8ff; }
+    .wh-form button:disabled { opacity: .4; cursor: not-allowed; }
+
+    .wh-hint {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 8px;
+    }
+
+    @@media (max-width: 700px) {
+        .wh-overview { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">QUẢN LÝ KHO</span>
+        <h1>Kho thuốc và vật tư</h1>
+        <p>Nhập kho, xuất kho và theo dõi cảnh báo tồn kho theo ngưỡng.</p>
+    </div>
+    <a class="btn" asp-action="Create">+ Thêm thuốc</a>
+</div>
+
+<div class="wh-overview">
+    <div class="wh-stat">
+        <span>Thuốc đang hoạt động</span>
+        <strong>@activeMedicines.Count</strong>
+    </div>
+    <div class="wh-stat critical">
+        <span>Thuốc hết hàng</span>
+        <strong>@outOfStock.Count</strong>
+    </div>
+    <div class="wh-stat low">
+        <span>Thuốc chạm / dưới ngưỡng</span>
+        <strong>@lowStock.Count</strong>
+    </div>
+</div>
+
+@if (warnings.Count > 0)
+{
+    <div class="wh-warning-box" role="alert">
+        <h2>⚠ Cảnh báo tồn kho: @warnings.Count loại thuốc cần chú ý</h2>
+        <p>
+            Có @outOfStock.Count loại hết hàng và @lowStock.Count loại có tồn kho
+            nhỏ hơn hoặc bằng ngưỡng cảnh báo. Hãy kiểm tra và nhập bổ sung khi cần.
+        </p>
+        <div class="wh-warning-list">
+            @foreach (var medicine in warnings)
+            {
+                <a href="#medicine-@medicine.Id">
+                    @medicine.Name: @medicine.QuantityOnHand / @medicine.ReorderLevel
+                </a>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="wh-healthy-box">✓ Các loại thuốc đang hoạt động đều có tồn kho trên ngưỡng cảnh báo.</div>
+}
+
+<div class="panel">
+    <h2>Danh mục thuốc – nhập kho và xuất kho</h2>
+    <p class="wh-hint">
+        Số tồn ≤ ngưỡng sẽ được tô màu cảnh báo. Xuất kho thủ công chỉ dành cho điều chuyển,
+        kiểm kê hoặc tiêu hủy; cấp phát cho thú cưng thực hiện ở phần đơn thuốc phía dưới.
+    </p>
+
+    <div class="table-wrap">
+        <table class="wh-stock-table">
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Thuốc</th>
+                    <th>Đơn vị</th>
+                    <th>Giá</th>
+                    <th>Tồn kho</th>
+                    <th>Ngưỡng cảnh báo</th>
+                    <th>Hạn dùng</th>
+                    <th>Trạng thái</th>
+                    <th>Nhập kho</th>
+                    <th>Xuất kho</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var medicine in Model)
+                {
+                    var isEmpty = medicine.QuantityOnHand == 0;
+                    var isLow = medicine.QuantityOnHand <= medicine.ReorderLevel;
+                    var isExpired = medicine.ExpiresOn.HasValue &&
+                                    medicine.ExpiresOn.Value.Date < today;
+
+                    <tr id="medicine-@medicine.Id"
+                        class="@(medicine.IsActive && isEmpty ? "wh-row-empty" :
+                                 medicine.IsActive && isLow ? "wh-row-low" : "")">
+                        <td>#@medicine.Id</td>
+                        <td><strong>@medicine.Name</strong></td>
+                        <td>@medicine.Unit</td>
+                        <td>@medicine.UnitPrice.ToString("N0") ₫</td>
+                        <td>
+                            <strong class="@(isLow ? "pill warning" : "pill")">
+                                @medicine.QuantityOnHand
+                            </strong>
+                        </td>
+                        <td>@medicine.ReorderLevel</td>
+                        <td>@(medicine.ExpiresOn?.ToString("dd/MM/yyyy") ?? "—")</td>
+                        <td>
+                            <div class="wh-badges">
+                                @if (!medicine.IsActive)
+                                {
+                                    <span class="wh-tag empty">Ngừng dùng</span>
+                                }
+                                else if (isEmpty)
+                                {
+                                    <span class="wh-tag empty">Hết hàng</span>
+                                }
+                                else if (isLow)
+                                {
+                                    <span class="wh-tag low">Cần nhập thêm</span>
+                                }
+                                else
+                                {
+                                    <span class="wh-tag ok">Đủ tồn kho</span>
+                                }
+
+                                @if (isExpired)
+                                {
+                                    <span class="wh-tag expired">Hết hạn</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <form method="post"
+                                  asp-area="Warehouse"
+                                  asp-controller="Dashboard"
+                                  asp-action="Receive"
+                                  class="wh-form">
+                                <input type="hidden" name="MedicineId" value="@medicine.Id" />
+                                <input type="number" name="Quantity" min="1" max="999999"
+                                       value="1" required aria-label="Số lượng nhập @medicine.Name" />
+                                <button type="submit" class="btn btn-small"
+                                        disabled="@(!medicine.IsActive || isExpired)">
+                                    Nhập
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post"
+                                  asp-area="Warehouse"
+                                  asp-controller="Dashboard"
+                                  asp-action="ExportStock"
+                                  class="wh-form"
+                                  onsubmit="return confirm('Xác nhận xuất kho và trừ tồn kho?');">
+                                <input type="hidden" name="medicineId" value="@medicine.Id" />
+                                <input type="number" name="quantity" min="1" max="999999"
+                                       value="1" required aria-label="Số lượng xuất @medicine.Name"
+                                       disabled="@(isEmpty)" />
+                                <select name="reason" required aria-label="Lý do xuất @medicine.Name"
+                                        disabled="@(isEmpty)">
+                                    <option value="">-- Lý do xuất --</option>
+                                    <option value="Điều chuyển kho">Điều chuyển kho</option>
+                                    <option value="Điều chỉnh giảm sau kiểm kê">Điều chỉnh kiểm kê</option>
+                                    <option value="Tiêu hủy thuốc hết hạn">Tiêu hủy hết hạn</option>
+                                    <option value="Tiêu hủy thuốc hỏng">Tiêu hủy thuốc hỏng</option>
+                                </select>
+                                <button type="submit" class="btn btn-small wh-btn-export"
+                                        disabled="@(isEmpty)">
+                                    Xuất
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="10">Kho chưa có thuốc.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Đơn thuốc chờ cấp phát</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã chi tiết</th>
+                    <th>Thuốc</th>
+                    <th>Số lượng</th>
+                    <th>Ca khám</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (PrescriptionItem item in ViewBag.Prescriptions)
+                {
+                    <tr>
+                        <td>#@item.Id</td>
+                        <td>@item.Medicine.Name</td>
+                        <td>@item.Quantity</td>
+                        <td>#@item.MedicalRecord.AppointmentId</td>
+                        <td>
+                            <form method="post" asp-action="Dispense" asp-route-id="@item.Id"
+                                  onsubmit="return confirm('Xác nhận cấp phát theo đơn và trừ kho?');">
+                                <button class="btn btn-small" type="submit">Cấp phát</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

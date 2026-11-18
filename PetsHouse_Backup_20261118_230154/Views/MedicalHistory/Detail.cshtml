@@ -1,0 +1,87 @@
+@model Appointment
+
+@{
+    ViewData["Title"] = "Chi tiết bệnh án";
+    var record = Model.MedicalRecord!;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">BỆNH ÁN ĐIỆN TỬ</span>
+        <h1>Bệnh án #@record.Id – @Model.Pet.Name</h1>
+        <p>Khám ngày @Model.StartsAt.ToString("dd/MM/yyyy HH:mm")</p>
+    </div>
+    <a asp-action="Index">← Lịch sử khám</a>
+</div>
+
+<div class="panel">
+    <div class="detail-grid">
+        <div>
+            <span class="muted">Loại khám</span>
+            <h3>@Model.ClinicService.Name</h3>
+        </div>
+        <div>
+            <span class="muted">Bác sĩ</span>
+            <h3>@(Model.Veterinarian?.FullName ?? "Chưa xác định")</h3>
+        </div>
+        <div>
+            <span class="muted">Triệu chứng</span>
+            <p>@record.Symptoms</p>
+        </div>
+        <div>
+            <span class="muted">Chẩn đoán</span>
+            <p>@record.Diagnosis</p>
+        </div>
+        <div>
+            <span class="muted">Hướng điều trị</span>
+            <p>@(record.Treatment ?? "Không có ghi chú")</p>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Thuốc được kê</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Thuốc</th>
+                    <th>Số lượng</th>
+                    <th>Hướng dẫn sử dụng</th>
+                    <th>Cấp phát</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in record.Prescriptions)
+                {
+                    <tr>
+                        <td>@item.Medicine.Name</td>
+                        <td>@item.Quantity @item.Medicine.Unit</td>
+                        <td>@item.Directions</td>
+                        <td>@(item.DispensedAtUtc.HasValue ? "Đã cấp" : "Chưa cấp")</td>
+                    </tr>
+                }
+                @if (!record.Prescriptions.Any())
+                {
+                    <tr>
+                        <td colspan="4">Bác sĩ không kê thuốc ở lần khám này.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.Invoice != null)
+{
+    <div class="panel">
+        <h2>Thanh toán sau khám</h2>
+        <p>
+            Trạng thái:
+            <strong>@Model.Invoice.Status.ToVietnamese()</strong>
+            · Tổng:
+            <strong>@Model.Invoice.Total.ToString("N0") ₫</strong>
+        </p>
+        <p class="muted">Không đặt cọc hoặc thu tiền khi đặt lịch.</p>
+    </div>
+}

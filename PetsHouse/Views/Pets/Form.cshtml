@@ -1,0 +1,12 @@
+@model PetVm
+@{var editing=Model.Id>0;ViewData["Title"]=editing?"Sửa hồ sơ":"Thêm thú cưng";}
+<div class="page-title"><div><span class="eyebrow">HỒ SƠ THÚ CƯNG</span><h1>@ViewData["Title"]</h1></div><a asp-action="Index">← Quay lại</a></div>
+<div class="panel narrow"><form class="form-stack" method="post" asp-action="@(editing?"Edit":"Create")" asp-route-id="@Model.Id"><input asp-for="Id" type="hidden"/><div asp-validation-summary="ModelOnly" class="validation"></div>
+<label asp-for="Name">Tên thú cưng *</label><input asp-for="Name"/><span asp-validation-for="Name" class="validation"></span>
+<label asp-for="Species">Loài *</label><input asp-for="Species" placeholder="Ví dụ: Chó / Mèo"/><span asp-validation-for="Species" class="validation"></span>
+<label asp-for="Breed">Giống</label><input asp-for="Breed"/>
+<label asp-for="Gender">Giới tính</label><select asp-for="Gender"><option value="">Chọn</option><option>Đực</option><option>Cái</option></select>
+<label asp-for="BirthDate">Ngày sinh</label><input asp-for="BirthDate" type="date"/>
+<label asp-for="WeightKg">Cân nặng (kg)</label><input asp-for="WeightKg" type="number" step="0.01"/>
+<label asp-for="Notes">Ghi chú</label><textarea asp-for="Notes" rows="3"></textarea>
+<button type="submit" class="btn">Lưu hồ sơ</button></form></div>

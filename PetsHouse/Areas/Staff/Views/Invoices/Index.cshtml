@@ -1,0 +1,71 @@
+@model List<Invoice>
+
+@{
+    ViewData["Title"] = "Hóa đơn đã thanh toán";
+    var page = (int)ViewBag.CurrentPage;
+    var pageSize = (int)ViewBag.PageSize;
+    var total = (int)ViewBag.Total;
+    var stt = (page - 1) * pageSize;
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">NHÂN VIÊN / THU NGÂN</span>
+        <h1>Hóa đơn đã thanh toán</h1>
+        <p>Tra cứu, xem lại và in hóa đơn sau khám.</p>
+    </div>
+    <a class="btn" asp-area="Staff" asp-controller="Payments" asp-action="Index">Ca chờ thanh toán</a>
+</div>
+
+<div class="panel">
+    <h2>Danh sách hóa đơn (@total)</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Mã hóa đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Thú cưng</th>
+                    <th>Ngày thanh toán</th>
+                    <th>Tổng tiền</th>
+                    <th>In hóa đơn</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var invoice in Model)
+                {
+                    stt++;
+                    <tr>
+                        <td>@stt</td>
+                        <td>#@invoice.Id</td>
+                        <td>@invoice.Appointment.Customer.Name</td>
+                        <td>@invoice.Appointment.Pet.Name</td>
+                        <td>@(invoice.PaidAtUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                        <td>@invoice.Total.ToString("N0") ₫</td>
+                        <td>
+                            <a class="btn btn-small btn-outline" asp-area="Staff"
+                               asp-controller="Payments" asp-action="Receipt"
+                               asp-route-id="@invoice.Id">Xem / In</a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="7">Chưa có hóa đơn đã thanh toán.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-actions">
+        @if (page > 1)
+        {
+            <a class="btn btn-outline" asp-action="Index" asp-route-page="@(page - 1)">← Trang trước</a>
+        }
+        <span>Trang @(page) / @Math.Max(1, (int)Math.Ceiling((double)total / pageSize))</span>
+        @if (page * pageSize < total)
+        {
+            <a class="btn btn-outline" asp-action="Index" asp-route-page="@(page + 1)">Trang sau →</a>
+        }
+    </div>
+</div>

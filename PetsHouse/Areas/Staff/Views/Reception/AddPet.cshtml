@@ -1,0 +1,45 @@
+@model StaffPetCreateVm
+
+@{
+    ViewData["Title"] = "Thêm thú cưng";
+}
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">NHÂN VIÊN / TIẾP NHẬN</span>
+        <h1>Thêm thú cưng</h1>
+        <p>Chủ nuôi: @ViewBag.CustomerName</p>
+    </div>
+    <a class="btn btn-outline" asp-action="Index">← Danh sách</a>
+</div>
+
+<div class="panel narrow">
+    <form method="post" asp-action="AddPet" class="form-stack">
+        <input asp-for="CustomerId" type="hidden" />
+        <div asp-validation-summary="All" class="validation"></div>
+        <label asp-for="Name">Tên thú cưng</label>
+        <input asp-for="Name" maxlength="80" />
+        <label asp-for="Species">Loài</label>
+        <select asp-for="Species">
+            <option value="">-- Chọn loài --</option>
+            <option value="Chó">Chó</option>
+            <option value="Mèo">Mèo</option>
+            <option value="Khác">Khác</option>
+        </select>
+        <label asp-for="Breed">Giống</label>
+        <input asp-for="Breed" maxlength="80" />
+        <label asp-for="Gender">Giới tính</label>
+        <select asp-for="Gender">
+            <option value="">Chưa xác định</option>
+            <option value="Đực">Đực</option>
+            <option value="Cái">Cái</option>
+        </select>
+        <label asp-for="BirthDate">Ngày sinh (nếu biết)</label>
+        <input asp-for="BirthDate" type="date" />
+        <label asp-for="WeightKg">Cân nặng (kg)</label>
+        <input asp-for="WeightKg" type="number" step="0.01" min="0" />
+        <label asp-for="Notes">Ghi chú</label>
+        <textarea asp-for="Notes" rows="3" maxlength="300"></textarea>
+        <button class="btn" type="submit">Lưu hồ sơ thú cưng</button>
+    </form>
+</div>

@@ -1,0 +1,368 @@
+@model PetsHouse.Models.ShiftCalendarVm
+
+@{
+    ViewData["Title"] = "Tiếp nhận và phân công lịch bác sĩ";
+    var first = new DateTime(Model.Year, Model.Month, 1);
+    var previous = first.AddMonths(-1);
+    var next = first.AddMonths(1);
+    var now = DateTime.Now;
+    string[] weekdays = { "T2", "T3", "T4", "T5", "T6", "T7", "CN" };
+}
+
+<link rel="stylesheet" href="~/css/pets-shift-calendar.css" asp-append-version="true" />
+
+<div class="page-title">
+    <div>
+        <span class="eyebrow">NHÂN VIÊN / QUẢN LÝ CA BÁC SĨ</span>
+        <h1>Tiếp nhận và phân công lịch làm</h1>
+        <p><strong>Mỗi ca tối đa 3 bác sĩ.</strong> Bác sĩ chỉ gửi đăng ký.
+           Admin/Nhân viên tiếp nhận và bấm Phân công thì mới có tên trong lịch làm việc.
+           Mỗi ngày có Ca 1 (08:00–16:00) và Ca 2 (16:00–20:00).</p>
+    </div>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="sc-message sc-message-ok">@success</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="sc-message sc-message-error">@error</div>
+}
+
+<div class="sc-summary">
+    <div class="sc-stat"><span>Yêu cầu chờ tiếp nhận</span><strong>@Model.PendingCount</strong></div>
+    <div class="sc-stat"><span>Đã tiếp nhận, chờ phân công</span><strong>@Model.AcceptedCount</strong></div>
+    <div class="sc-stat sc-stat-warning"><span>Ca chưa được phân công</span><strong>@Model.MissingCount</strong></div>
+    <div class="sc-stat sc-stat-warning"><span>Ca tương lai thiếu bác sĩ</span><strong>@Model.MissingUpcomingCount</strong></div>
+</div>
+
+<div class="sc-calendar-panel" style="margin-bottom:18px">
+    <h2>Danh sách đăng ký cần xử lý</h2>
+    <p>Yêu cầu trong tháng đang xem. Tiếp nhận trước khi phân công.</p>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Ngày</th><th>Ca</th><th>Bác sĩ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody>
+                @foreach (var day in Model.Days.Where(d => d.IsCurrentMonth))
+                {
+                    foreach (var slot in day.Slots)
+                    {
+                        foreach (var request in slot.Requests.Where(r => r.Status == ShiftRequestStatus.Pending || r.Status == ShiftRequestStatus.Accepted))
+                        {
+                            <tr>
+                                <td>@day.Date.ToString("dd/MM/yyyy")</td>
+                                <td>@slot.Name · @slot.TimeLabel</td>
+                                <td>@request.DoctorName</td>
+                                <td>@(request.Status == ShiftRequestStatus.Pending ? "Chờ tiếp nhận" : "Chờ phân công")</td>
+                                <td>
+                                    @if (slot.StartAt <= now)
+                                    {
+                                        <span>Đã quá hạn</span>
+                                    }
+                                    else if (request.Status == ShiftRequestStatus.Accepted && slot.Assignments.Count >= 3)
+                                    {
+                                        <span style="color:#b45309;font-weight:700">Đã đủ 3/3 · Chờ ca trống</span>
+                                    }
+                                    else
+                                    {
+                                        <form asp-area="Staff" asp-controller="WorkShifts" asp-action="@(request.Status == ShiftRequestStatus.Pending ? "Accept" : "Assign")" method="post">
+                                            <input type="hidden" name="RequestId" value="@request.RequestId" />
+                                            <button class="sc-button" type="submit">@(request.Status == ShiftRequestStatus.Pending ? "Tiếp nhận" : "Phân công")</button>
+                                        </form>
+                                    }
+                                    @if (slot.StartAt > now)
+                                    {
+                                        <details class="sc-details" style="margin-top:5px">
+                                            <summary>Từ chối đăng ký</summary>
+                                            <form asp-area="Staff" asp-controller="WorkShifts" asp-action="Reject" method="post"
+                                                  class="sc-inline-form" onsubmit="return confirm('Từ chối đăng ký này?');">
+                                                <input type="hidden" name="RequestId" value="@request.RequestId" />
+                                                <input name="Note" required maxlength="400" placeholder="Lý do từ chối" />
+                                                <button type="submit" class="sc-button sc-button-danger">Từ chối</button>
+                                            </form>
+                                        </details>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+                @if (Model.PendingCount + Model.AcceptedCount == 0)
+                {
+                    <tr><td colspan="5">Không có yêu cầu cần xử lý.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="sc-calendar-panel">
+    <div class="sc-toolbar">
+        <a class="sc-nav" asp-area="Staff" asp-controller="WorkShifts" asp-action="Index"
+           asp-route-year="@previous.Year" asp-route-month="@previous.Month" aria-label="Tháng trước">&#x2039;</a>
+        <h2>Tháng @Model.Month/@Model.Year</h2>
+        <a class="sc-nav" asp-area="Staff" asp-controller="WorkShifts" asp-action="Index"
+           asp-route-year="@next.Year" asp-route-month="@next.Month" aria-label="Tháng sau">&#x203A;</a>
+        <a class="sc-today" asp-area="Staff" asp-controller="WorkShifts" asp-action="Index">Hôm nay</a>
+        <span class="sc-legend"><span class="sc-dot sc-dot-ok"></span>Đã phân công</span>
+        <span class="sc-legend"><span class="sc-dot sc-dot-pending"></span>Đăng ký chờ xử lý ở bảng phía trên</span>
+        <span class="sc-legend"><span class="sc-dot sc-dot-missing"></span>Chưa có bác sĩ</span>
+    </div>
+
+    <div class="sc-overflow">
+        <div class="sc-weekdays">
+            @foreach (var weekday in weekdays)
+            {
+                <div>@weekday</div>
+            }
+        </div>
+        <div class="sc-grid">
+            @foreach (var day in Model.Days)
+            {
+                var dayClass = day.IsCurrentMonth ? "" : "sc-outside";
+                if (day.IsToday)
+                {
+                    dayClass += " sc-today-day";
+                }
+
+                <div class="sc-day @dayClass">
+                    <div class="sc-date">@day.Date.Day</div>
+                    @if (day.IsCurrentMonth)
+                    {
+                        @foreach (var slot in day.Slots)
+                        {
+                            // Chỉ lịch đã PHÂN CÔNG mới được tô xanh.
+                            var slotClass = slot.Missing ? "sc-missing" : "sc-covered";
+
+                            <div class="sc-slot @slotClass">
+                                <div class="sc-slot-head">
+                                    <strong>@slot.Name</strong>
+                                    <small>@slot.TimeLabel</small>
+                                </div>
+                                <div style="font-weight:800;margin:7px 0;color:#075985">
+                                    Đã xếp @slot.Assignments.Count/3 bác sĩ
+                                </div>
+                                @if (slot.Assignments.Count > 3)
+                                {
+                                    <div class="sc-alert">⚠ Dữ liệu cũ vượt 3 bác sĩ/ca. Không xếp thêm; cần rà soát dữ liệu lịch cũ.</div>
+                                }
+                                else if (slot.Assignments.Count == 3)
+                                {
+                                    <div class="sc-request-status">Đã đủ 3 vị trí</div>
+                                }
+
+                                @if (slot.Missing)
+                                {
+                                    <div class="sc-alert">⚠ Chưa có bác sĩ được phân công</div>
+                                }
+
+                                @* Quan trọng: Pending/Accepted CHỈ nằm ở bảng đăng ký phía trên.
+                                   Không hiện tên bác sĩ đăng ký ở LỊCH LÀM chính thức. *@
+                                @* CHỈ WorkShifts thật mới xuất hiện trong danh sách phân công. *@
+                                @* Đăng ký Pending/Accepted không được tự điền vào 3 vị trí này. *@
+                                @for (var emptySeat = slot.Assignments.Count + 1; emptySeat <= 3; emptySeat++)
+                                {
+                                    <div class="sc-muted" style="border:1px dashed #bbd5e7;border-radius:7px;padding:7px;margin-top:5px">
+                                        Vị trí @emptySeat/3: Chưa phân công
+                                    </div>
+                                }
+                                @foreach (var entry in slot.Assignments)
+                                {
+                                    <div class="sc-doctor">✓ @entry.DoctorName</div>
+
+                                    @if (slot.StartAt > now && entry.IsStandard)
+                                    {
+                                        <details class="sc-details sc-manage">
+                                            <summary>Đổi bác sĩ cho ca này</summary>
+                                            @if (entry.ReplacementCandidates.Any(c => c.Status == ShiftRequestStatus.Accepted))
+                                            {
+                                                <form asp-area="Staff" asp-controller="WorkShifts"
+                                                      asp-action="Replace" method="post" class="sc-inline-form"
+                                                      onsubmit="return confirm('Thay bác sĩ và chuyển những lịch khám chưa thực hiện?');">
+                                                    <input type="hidden" name="Id" value="@entry.ShiftId" />
+                                                    <label>Bác sĩ đã đăng ký &amp; được tiếp nhận đúng ca</label>
+                                                    <select name="NewDoctorId" required>
+                                                        <option value="">-- Chọn bác sĩ thay thế --</option>
+                                                        @foreach (var candidate in entry.ReplacementCandidates.Where(c => c.Status == ShiftRequestStatus.Accepted))
+                                                        {
+                                                            <option value="@candidate.DoctorId">@candidate.DoctorName</option>
+                                                        }
+                                                    </select>
+                                                    <label>Lý do thay thế</label>
+                                                    <input name="Reason" minlength="3" maxlength="400" required
+                                                           placeholder="Ví dụ: Bác sĩ hiện tại xin nghỉ" />
+                                                    <button type="submit" class="sc-button">Thay bác sĩ &amp; hủy ca cũ</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                // Danh sach bac si khac: khai bao truc tiep trong khoi else cua Razor.
+                                                var otherDoctors = Model.Doctors
+                                                    .Where(doctor => doctor.Id != entry.DoctorId && doctor.IsActive)
+                                                    .OrderBy(doctor => doctor.FullName)
+                                                    .ToList();
+
+                                                <div class="sc-muted" style="margin:10px 0">
+                                                    <strong>Chưa có bác sĩ thay thế đủ điều kiện.</strong>
+                                                    Hệ thống chỉ cho đổi sang người đã đăng ký đúng
+                                                    <strong>@day.Date.ToString("dd/MM/yyyy") · @slot.Name (@slot.TimeLabel)</strong>
+                                                    và đã được nhân viên tiếp nhận.
+                                                </div>
+
+                                                @* Hiển thị nguyên nhân từng người không đủ điều kiện.
+                                                   Không cho chọn bác sĩ chưa đăng ký, không tạo đăng ký giả. *@
+
+                                                @if (otherDoctors.Count == 0)
+                                                {
+                                                    <p class="sc-muted">Hiện chưa có bác sĩ khác đang hoạt động.</p>
+                                                }
+                                                else
+                                                {
+                                                    <div style="display:grid;gap:8px;margin:10px 0">
+                                                        @foreach (var doctor in otherDoctors)
+                                                        {
+                                                            var request = slot.Requests
+                                                                .FirstOrDefault(x => x.DoctorId == doctor.Id);
+                                                            <div style="background:#fff;padding:9px;border:1px solid #dbe6ef;border-radius:9px;line-height:1.55">
+                                                                <strong>@doctor.FullName</strong>
+                                                                @if (request is null)
+                                                                {
+                                                                    <div class="sc-muted">Chưa đăng ký đúng ngày/ca này.</div>
+                                                                }
+                                                                else if (request.Status == ShiftRequestStatus.Pending)
+                                                                {
+                                                                    <div class="sc-muted">Đã đăng ký · Chờ nhân viên tiếp nhận.</div>
+                                                                    <form asp-area="Staff" asp-controller="WorkShifts"
+                                                                          asp-action="Accept" method="post"
+                                                                          style="margin-top:6px">
+                                                                        <input type="hidden" name="RequestId" value="@request.RequestId" />
+                                                                        <button type="submit" class="sc-button">Tiếp nhận để có thể đổi</button>
+                                                                    </form>
+                                                                }
+                                                                else if (request.Status == ShiftRequestStatus.Accepted)
+                                                                {
+                                                                    <div class="sc-muted">Đã tiếp nhận. Tải lại trang để cập nhật danh sách thay thế.</div>
+                                                                }
+                                                                else if (request.Status == ShiftRequestStatus.Assigned)
+                                                                {
+                                                                    <div class="sc-muted">Đã có ca phân công; cần kiểm tra lịch trùng và đăng ký.</div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="sc-muted">Đăng ký hiện không hợp lệ hoặc đã bị rút/từ chối.</div>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                                <p class="sc-muted">
+                                                    Bác sĩ thay thế đăng nhập <strong>Tài khoản bác sĩ → Lịch làm việc</strong>
+                                                    để đăng ký ca; nhân viên tiếp nhận, rồi mở lại mục này.
+                                                    Không được tự thay người khi chưa có đăng ký.
+                                                </p>
+                                            }
+                                        </details>
+
+                                        <details class="sc-details sc-manage">
+                                            <summary>Chuyển ngày/ca (không có lịch khám)</summary>
+                                            <form asp-area="Staff" asp-controller="WorkShifts"
+                                                  asp-action="Move" method="post" class="sc-inline-form"
+                                                  onsubmit="return confirm('Chỉ chuyển ca nếu bác sĩ đã đăng ký và được tiếp nhận ở ngày/ca mới. Tiếp tục?');">
+                                                <input type="hidden" name="Id" value="@entry.ShiftId" />
+                                                <label>Ngày mới</label>
+                                                <input type="date" name="WorkDate"
+                                                       value="@(day.Date.ToString("yyyy-MM-dd"))" required />
+                                                <label>Ca mới</label>
+                                                <select name="ShiftCode" required>
+                                                    @foreach (var template in ShiftCatalog.All)
+                                                    {
+                                                        <option value="@template.Code" selected="@(template.Code == slot.Code)">
+                                                            @template.Name
+                                                        </option>
+                                                    }
+                                                </select>
+                                                <p class="sc-muted">Bác sĩ phải đăng ký ca mới trước, ca cũ không được có lịch khám.</p>
+                                                <button type="submit" class="sc-button">Chuyển ca</button>
+                                            </form>
+                                        </details>
+
+                                        <details class="sc-details sc-manage">
+                                            <summary>Hủy phân công bác sĩ này</summary>
+                                            <form asp-area="Staff" asp-controller="WorkShifts"
+                                                  asp-action="Cancel" method="post" class="sc-inline-form"
+                                                  onsubmit="return confirm('Hủy phân công của bác sĩ này? Nếu có lịch khám, hệ thống sẽ chuyển sang bác sĩ bạn chọn sau khi kiểm tra lịch trống.');">
+                                                <input type="hidden" name="Id" value="@entry.ShiftId" />
+                                                <label>Bác sĩ nhận lịch khám (chỉ chọn nếu ca này còn lịch khám)</label>
+                                                <select name="receiveDoctorId">
+                                                    <option value="">Không chuyển lịch khám / Ca chưa có lịch khám</option>
+                                                    @foreach (var other in slot.Assignments.Where(x => x.DoctorId != entry.DoctorId))
+                                                    {
+                                                        <option value="@other.DoctorId">@other.DoctorName (đã được phân công cùng ca)</option>
+                                                    }
+                                                </select>
+                                                <p class="sc-muted">Nếu không có lịch khám, có thể hủy trực tiếp. Nếu có lịch khám, chọn bác sĩ khác đã xếp ca để nhận lịch; hệ thống sẽ kiểm tra trùng giờ trước khi hủy.</p>
+                                                <label>Lý do hủy phân công</label>
+                                                <input name="Reason" minlength="3" maxlength="400" required
+                                                       placeholder="Ví dụ: Sửa dữ liệu cũ vượt 3 bác sĩ" />
+                                                <button type="submit" class="sc-button sc-button-danger">Xác nhận hủy phân công</button>
+                                            </form>
+                                        </details>
+                                    }
+                                }
+
+                                @if (slot.HasDoctorConflict)
+                                {
+                                    <div class="sc-alert">⚠ Một bác sĩ bị trùng giờ</div>
+                                }
+                                @if (slot.HasNonstandardOverlap)
+                                {
+                                    <div class="sc-alert">⚠ Có lịch cũ chưa đúng khung ca</div>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (Model.LegacyShifts.Any())
+{
+    <div class="sc-calendar-panel sc-legacy">
+        <h2>Lịch làm cũ không đúng khung ca</h2>
+        <p>Giữ nguyên ca cũ để bảo toàn dữ liệu. Ca tương lai không có lịch khám được hủy trực tiếp. Nếu có lịch khám cần chuyển cho bác sĩ khác đã được xếp ca; hãy xử lý trong lịch khám trước khi hủy ca cũ.</p>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Mã</th><th>Bác sĩ</th><th>Bắt đầu</th><th>Kết thúc</th><th>Hủy</th></tr></thead>
+                <tbody>
+                    @foreach (var legacy in Model.LegacyShifts)
+                    {
+                        <tr>
+                            <td>#@legacy.ShiftId</td>
+                            <td>@legacy.DoctorName</td>
+                            <td>@legacy.StartAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@legacy.EndAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (legacy.StartAt > now)
+                                {
+                                    <form asp-area="Staff" asp-controller="WorkShifts" asp-action="Cancel" method="post">
+                                        <input type="hidden" name="Id" value="@legacy.ShiftId" />
+                                        <input name="Reason" minlength="3" maxlength="400" required
+                                               placeholder="Lý do hủy" />
+                                        <button type="submit" class="sc-button sc-button-danger">Hủy ca cũ</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span>Đã bắt đầu</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
