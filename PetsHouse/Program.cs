@@ -1,4 +1,4 @@
-
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PetsHouse.Data;
@@ -6,6 +6,25 @@ using PetsHouse.Models;
 using PetsHouse.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (!builder.Environment.IsDevelopment())
+{
+    var keysPath = Path.Combine(
+        builder.Environment.ContentRootPath,
+        "..",
+        "private",
+        "keys"
+    );
+
+    Directory.CreateDirectory(keysPath);
+
+    builder.Services.AddDataProtection()
+        .SetApplicationName("PetsHouse")
+        .PersistKeysToFileSystem(
+            new DirectoryInfo(keysPath)
+        );
+}
+
 string connection;
 if (builder.Environment.IsDevelopment())
 {
